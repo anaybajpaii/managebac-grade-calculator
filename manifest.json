@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Grade Calculator for ManageBac",
+  "version": "0.1.0",
+  "description": "Overlay on your ManageBac grades page that predicts your IB grade using official grade boundaries. All data stays in your browser.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://*.managebac.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
