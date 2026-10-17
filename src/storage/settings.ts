@@ -1,8 +1,9 @@
+import { CATCH_ALL } from "../engine/categories";
 import type { CategoryMethod } from "../engine/types";
 import type { KeyValueStore } from "./store";
 import type { ClassSettings, Weighting } from "./types";
 
-export const DEFAULT_WEIGHTINGS: Weighting[] = [{ name: "All tasks", weight: 100 }];
+export const DEFAULT_WEIGHTINGS: Weighting[] = [{ name: CATCH_ALL, weight: 100 }];
 
 export function defaultSettings(): ClassSettings {
   return {
