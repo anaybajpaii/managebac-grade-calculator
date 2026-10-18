@@ -126,6 +126,24 @@ describe("overlay", () => {
     expect(shadowOf(host()).querySelector(".panel")).not.toBeNull();
   });
 
+  it("re-attaches itself when the page replaces the body", () => {
+    const overlay = mountOverlay(document);
+    overlay.update(view);
+    const newBody = document.createElement("body");
+    document.documentElement.replaceChild(newBody, document.body);
+    expect(document.querySelector("[data-grade-calculator]")).toBeNull();
+    overlay.update({ ...view });
+    expect(document.querySelector("[data-grade-calculator]")).not.toBeNull();
+    expect(shadowOf(host()).querySelector(".tab")).not.toBeNull();
+  });
+
+  it("shows the title under the percentage on the tab", () => {
+    const overlay = mountOverlay(document);
+    overlay.update(view);
+    expect(shadowOf(host()).querySelector(".tab .t b")?.textContent).toBe("68.4%");
+    expect(shadowOf(host()).querySelector(".tab .t .s")?.textContent).toBe("Physics");
+  });
+
   it("removes itself on destroy", () => {
     const overlay = mountOverlay(document);
     overlay.update(view);

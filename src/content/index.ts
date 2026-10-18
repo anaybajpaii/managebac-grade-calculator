@@ -8,6 +8,10 @@ import { createChromeStore } from "../storage/store";
 import { mountOverlay, type Overlay } from "../ui/overlay";
 import { buildView } from "../ui/view-model";
 
+const TAG = "[Grade Calculator for ManageBac]";
+const DOCUMENT_EVENTS = ["turbo:load", "turbo:render", "turbolinks:load"];
+const WINDOW_EVENTS = ["popstate", "pageshow"];
+
 const boundaries = boundariesRaw as unknown as BoundariesFile;
 const store = createChromeStore();
 let overlay: Overlay | null = null;
@@ -29,8 +33,12 @@ async function refresh(): Promise<void> {
 
 function schedule(): void {
   window.clearTimeout(timer);
-  timer = window.setTimeout(() => void refresh(), 400);
+  timer = window.setTimeout(() => {
+    refresh().catch((error) => console.error(TAG, error));
+  }, 400);
 }
 
-void refresh();
-new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+schedule();
+new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+for (const name of DOCUMENT_EVENTS) document.addEventListener(name, schedule);
+for (const name of WINDOW_EVENTS) window.addEventListener(name, schedule);

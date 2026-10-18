@@ -28,10 +28,13 @@ function pct(value: number): string {
 }
 
 function renderTab(doc: Document, view: OverlayView, onOpen: () => void): HTMLElement {
-  const label =
-    view.percent === null
-      ? el(doc, "span", "t", "No graded tasks")
-      : el(doc, "span", "t", el(doc, "b", undefined, pct(view.percent)), view.title ? ` · ${view.title}` : "");
+  const label = el(doc, "span", "t");
+  if (view.percent === null) {
+    label.append(el(doc, "b", undefined, "No graded tasks"));
+  } else {
+    label.append(el(doc, "b", undefined, pct(view.percent)));
+  }
+  if (view.title) label.append(el(doc, "span", "s", view.title));
   const tab = el(doc, "button", "tab", el(doc, "span", "g", view.grade === null ? "–" : String(view.grade)), label);
   tab.type = "button";
   tab.setAttribute("aria-expanded", "false");
@@ -156,6 +159,7 @@ export function mountOverlay(doc: Document, store?: KeyValueStore): Overlay {
 
   return {
     update(view) {
+      if (!host.isConnected) doc.body.append(host);
       const key = JSON.stringify(view);
       if (key === lastKey) return;
       lastKey = key;
