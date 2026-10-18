@@ -16,6 +16,14 @@ describe("resolveSubject", () => {
     );
   });
 
+  it("understands maths abbreviations", () => {
+    const id = "mathematics-analysis-and-approaches-hl-3";
+    for (const title of ["Math AA HL", "Maths AA", "Mathematics AA", "Mathematics: AA"]) {
+      expect(resolveSubject(data, title, "HL", 3)?.id).toBe(id);
+    }
+    expect(resolveSubject(data, "Maths AI", "SL", 3)?.id).toContain("applications");
+  });
+
   it("ignores case, punctuation and extra words in the title", () => {
     expect(resolveSubject(data, "  PHYSICS (DP1 - 2026) ", "HL", 1)?.id).toBe("physics-hl-1");
     expect(resolveSubject(data, "Mathematics & Analysis & Approaches", "HL", 2)?.id).toBe(
@@ -47,7 +55,6 @@ describe("resolveSubject", () => {
   });
 
   it("returns undefined when nothing matches", () => {
-    expect(resolveSubject(data, "Maths AA", "HL", 3)).toBeUndefined();
     expect(resolveSubject(data, "", "HL", 3)).toBeUndefined();
     expect(resolveSubject(data, "Theory of Knowledge", "HL", 3)).toBeUndefined();
   });

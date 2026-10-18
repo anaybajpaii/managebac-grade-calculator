@@ -2,15 +2,22 @@ import type { BoundariesFile, SubjectBounds } from "./types";
 
 const STOP_WORDS = new Set(["a", "an", "and", "the", "of", "in", "for", "to"]);
 
+const ALIASES: Record<string, string[]> = {
+  math: ["mathematics"],
+  maths: ["mathematics"],
+  aa: ["analysis", "approaches"],
+  ai: ["applications", "interp"],
+};
+
 function tokens(text: string): string[] {
   return text
     .toLowerCase()
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")
-    .filter((t) => t !== "" && !STOP_WORDS.has(t));
+    .filter((t) => t !== "" && !STOP_WORDS.has(t))
+    .flatMap((t) => ALIASES[t] ?? [t]);
 }
-
 function nameMatches(nameTokens: string[], titleTokens: string[]): boolean {
   return nameTokens.length > 0 && nameTokens.every((n) => titleTokens.some((t) => t.startsWith(n)));
 }

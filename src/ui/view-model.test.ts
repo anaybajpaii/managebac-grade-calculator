@@ -80,7 +80,7 @@ describe("buildView", () => {
   it("still shows a percentage when the subject cannot be matched", () => {
     const view = buildView({
       ...base,
-      info: { title: "Maths AA", level: "HL" },
+      info: { title: "Theory of Knowledge", level: "HL" },
       tasks: [task("Tests", 60, 100)],
     });
     expect(view.percent).toBeCloseTo(60);
