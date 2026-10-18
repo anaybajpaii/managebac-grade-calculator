@@ -48,3 +48,13 @@ export function weightedPercent(
   if (totalWeight === 0) return null;
   return weighted / totalWeight;
 }
+
+export function pointsToNextGrade(
+  overall: BandSet,
+  percent: number,
+): { grade: number; needed: number } | null {
+  const current = gradeForMark(overall.bands, percent);
+  const next = overall.bands[current];
+  if (!next) return null;
+  return { grade: current + 1, needed: Math.max(0, next[0] - percent) };
+}
