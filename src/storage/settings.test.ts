@@ -186,3 +186,18 @@ describe("weight source", () => {
     expect("weightSource" in normalizeSettings({ weightSource: "nope" })).toBe(false);
   });
 });
+
+describe("extra weightings", () => {
+  it("keeps valid extra categories and drops invalid ones", () => {
+    const result = normalizeSettings({
+      extraWeightings: [
+        { name: " Formative ", weight: 20 },
+        { name: "", weight: 5 },
+        { name: "Bad", weight: -1 },
+        { name: "formative", weight: 9 },
+      ],
+    });
+    expect(result.extraWeightings).toEqual([{ name: "Formative", weight: 20 }]);
+    expect("extraWeightings" in normalizeSettings({ extraWeightings: [] })).toBe(false);
+  });
+});

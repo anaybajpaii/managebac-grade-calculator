@@ -146,6 +146,26 @@ describe("scrapeClassInfo", () => {
   });
 });
 
+describe("task categories on real ManageBac labels", () => {
+  it("keeps a category that has the same name as the type", () => {
+    document.body.innerHTML = [
+      card({ title: "Baseline", labels: ["Formative", "Formative"], points: "14 / 20 pts" }),
+      card({ title: "IO", labels: ["Summative", "Summative - Exam -Term End"], points: "26 / 40 pts" }),
+      card({ title: "Paper 2", labels: ["Summative", "Summative 1"], points: "12 / 20 pts" }),
+      card({ title: "Essay", labels: ["Classwork", "Homework"], points: "5 / 10 pts" }),
+    ]
+      .map((c) => `<div class="tasks-list-container">${c}</div>`)
+      .join("");
+    const { tasks } = scrapeTasks(document);
+    expect(tasks.map((t) => [t.type, t.category])).toEqual([
+      ["Formative", "Formative"],
+      ["Summative", "Summative - Exam -Term End"],
+      ["Summative", "Summative 1"],
+      [null, "Homework"],
+    ]);
+  });
+});
+
 describe("scrapeWeights", () => {
   const expected = [
     { name: "Semister Exam", weight: 40 },

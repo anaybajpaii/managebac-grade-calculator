@@ -7,6 +7,7 @@ const good: RawForm = {
     { name: "Formative", weight: "30" },
   ],
   usePage: false,
+  extras: [],
   method: "points",
   subjectName: "",
   level: "HL",
@@ -31,6 +32,7 @@ describe("parseForm", () => {
           { name: "Formative", weight: 30 },
         ],
         weightSource: "custom",
+        extraWeightings: [],
         method: "points",
         subjectName: null,
         level: "HL",
@@ -89,6 +91,28 @@ describe("weights from ManageBac", () => {
       { name: "Summative", weight: 70 },
       { name: "Formative", weight: 30 },
     ]);
+  });
+});
+
+describe("extra categories", () => {
+  const withExtras = { ...good, usePage: true };
+
+  it("keeps extra categories when the page's weights are used", () => {
+    const result = parseForm({ ...withExtras, extras: [{ name: " Formative ", weight: "20" }, { name: "", weight: "" }] });
+    expect(result.ok && result.value.extraWeightings).toEqual([{ name: "Formative", weight: 20 }]);
+  });
+
+  it("drops them when the weights are the user's own", () => {
+    const result = parseForm({ ...good, usePage: false, extras: [{ name: "Formative", weight: "20" }] });
+    expect(result.ok && result.value.extraWeightings).toEqual([]);
+  });
+
+  it("explains extra category problems", () => {
+    expect(error({ ...withExtras, extras: [{ name: "", weight: "10" }] })).toMatch(/extra category needs a name/);
+    expect(error({ ...withExtras, extras: [{ name: "Formative", weight: "" }] })).toMatch(/"Formative"/);
+    expect(
+      error({ ...withExtras, extras: [{ name: "F", weight: "1" }, { name: "f", weight: "2" }] }),
+    ).toMatch(/twice/);
   });
 });
 

@@ -7,6 +7,7 @@ import type { Weighting } from "../storage/types";
 export interface EditorSave {
   weightings: Weighting[];
   weightSource: "page" | "custom";
+  extraWeightings: Weighting[];
   method: CategoryMethod;
   subjectName: string | null;
   level: "SL" | "HL" | null;
@@ -17,6 +18,7 @@ export interface EditorSave {
 export interface RawForm {
   weightings: { name: string; weight: string }[];
   usePage: boolean;
+  extras: { name: string; weight: string }[];
   method: string;
   subjectName: string;
   level: string;
@@ -45,7 +47,9 @@ export function parseForm(raw: RawForm): FormResult {
       weightings.push({ name, weight });
     }
     if (!weightings.some((w) => w.weight > 0)) weightings.splice(0, weightings.length, { name: CATCH_ALL, weight: 100 });
-    return finish(raw, weightings, "page");
+    const extras = parseExtras(raw.extras);
+    if (!extras.ok) return extras;
+    return finish(raw, weightings, "page", extras.value);
   }
   for (const row of raw.weightings) {
     const name = row.name.trim();
@@ -65,10 +69,34 @@ export function parseForm(raw: RawForm): FormResult {
     return { ok: false, error: "At least one weight must be above 0." };
   }
 
-  return finish(raw, weightings, "custom");
+  return finish(raw, weightings, "custom", []);
 }
 
-function finish(raw: RawForm, weightings: Weighting[], weightSource: "page" | "custom"): FormResult {
+function parseExtras(rows: RawForm["extras"]): { ok: true; value: Weighting[] } | { ok: false; error: string } {
+  const result: Weighting[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const name = row.name.trim();
+    if (name === "" && row.weight.trim() === "") continue;
+    if (name === "") return { ok: false, error: "Every extra category needs a name." };
+    const weight = toNumber(row.weight);
+    if (!Number.isFinite(weight) || weight < 0) {
+      return { ok: false, error: `Enter a weight (0 or more) for "${name}".` };
+    }
+    const key = name.toLowerCase();
+    if (seen.has(key)) return { ok: false, error: `"${name}" appears twice.` };
+    seen.add(key);
+    result.push({ name, weight });
+  }
+  return { ok: true, value: result };
+}
+
+function finish(
+  raw: RawForm,
+  weightings: Weighting[],
+  weightSource: "page" | "custom",
+  extraWeightings: Weighting[],
+): FormResult {
   const timezone = Number(raw.timezone);
   if (!(TIMEZONES as readonly number[]).includes(timezone)) {
     return { ok: false, error: "Choose a timezone." };
@@ -87,6 +115,7 @@ function finish(raw: RawForm, weightings: Weighting[], weightSource: "page" | "c
     value: {
       weightings,
       weightSource,
+      extraWeightings,
       method: raw.method === "points" ? "points" : "average",
       subjectName: raw.subjectName.trim() === "" ? null : raw.subjectName.trim(),
       level: raw.level === "SL" || raw.level === "HL" ? raw.level : null,

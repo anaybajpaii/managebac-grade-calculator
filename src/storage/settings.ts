@@ -51,6 +51,8 @@ export function normalizeSettings(raw: unknown): ClassSettings {
     method: isMethod(record.method) ? record.method : defaults.method,
   };
   if (record.weightSource === "page" || record.weightSource === "custom") result.weightSource = record.weightSource;
+  const extras = cleanWeightings(record.extraWeightings);
+  if (extras.length > 0) result.extraWeightings = extras;
   if (typeof record.subjectName === "string" && record.subjectName.trim() !== "") {
     result.subjectName = record.subjectName.trim();
   }

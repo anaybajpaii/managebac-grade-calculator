@@ -201,4 +201,45 @@ describe("buildView", () => {
     expect(view.weightsFromPage).toBe(false);
     expect(view.editor.pageWeights).toBeNull();
   });
+  
+  it("counts extra categories on top of the page's weights", () => {
+    const view = buildView({
+      ...base,
+      pageWeights: [{ name: "Tests", weight: 80 }],
+      settings: { ...defaultSettings(), extraWeightings: [{ name: "Formative", weight: 20 }] },
+      tasks: [task("Tests", 60, 100), task("Formative", 100, 100)],
+    });
+    expect(view.percent).toBeCloseTo(68);
+    expect(view.rows.map((r) => r.name)).toEqual(["Tests", "Formative"]);
+    expect(view.unassigned).toEqual([]);
+    expect(view.editor.extraWeightings).toEqual([{ name: "Formative", weight: 20 }]);
+  });
+
+  it("lets ManageBac's own weight win over an extra with the same name", () => {
+    const view = buildView({
+      ...base,
+      pageWeights: [{ name: "Tests", weight: 100 }],
+      settings: { ...defaultSettings(), extraWeightings: [{ name: "tests", weight: 50 }] },
+      tasks: [task("Tests", 60, 100)],
+    });
+    expect(view.rows).toHaveLength(1);
+    expect(view.rows[0]?.weight).toBe(100);
+  });
+
+  it("ignores extras when the user's own weights are used", () => {
+    const view = buildView({
+      ...base,
+      pageWeights: [{ name: "Tests", weight: 100 }],
+      settings: {
+        ...defaultSettings(),
+        weightSource: "custom",
+        weightings: [{ name: "Tests", weight: 100 }],
+        extraWeightings: [{ name: "Formative", weight: 50 }],
+      },
+      tasks: [task("Tests", 60, 100), task("Formative", 100, 100)],
+    });
+    expect(view.percent).toBeCloseTo(60);
+    expect(view.unassigned).toEqual(["Formative"]);
+  });
+  
 });

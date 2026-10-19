@@ -27,6 +27,7 @@ const view: OverlayView = {
     editor: {
     pageWeights: null,
     usePageWeights: false,
+    extraWeightings: [],
     weightings: [
       { name: "Tests", weight: 70 },
       { name: "Homework", weight: 30 },
@@ -171,11 +172,11 @@ describe("overlay", () => {
     const overlay = mountOverlay(document);
     overlay.update(view);
     const root = openSettings();
-    const chips = [...root.querySelectorAll(".chips .chip")].map((c) => c.textContent);
+    const chips = [...root.querySelectorAll(".wbox .chips .chip")].map((c) => c.textContent);
     expect(chips).toEqual(["+ Quizzes"]);
-    (root.querySelector(".chips .chip") as HTMLElement).click();
-    expect(root.querySelectorAll(".wrow").length).toBe(3);
-    expect(root.querySelector(".chips .chip")).toBeNull();
+    (root.querySelector(".wbox .chips .chip") as HTMLElement).click();
+    expect(root.querySelectorAll(".wbox .wrow").length).toBe(3);
+    expect(root.querySelector(".wbox .chips .chip")).toBeNull();
   });
 
   it("updates the total as weights change", () => {
@@ -203,6 +204,7 @@ describe("overlay", () => {
           { name: "Homework", weight: 40 },
         ],
         weightSource: "custom",
+        extraWeightings: [],
         method: "average",
         subjectName: null,
         level: null,
@@ -318,6 +320,32 @@ describe("overlay", () => {
     (root.querySelector(".btn.primary") as HTMLElement).click();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(saved[0]?.weightSource).toBe("page");
+  });
+
+  it("lets you add extra categories on top of the page's weights", async () => {
+    const saved: { extraWeightings: unknown }[] = [];
+    const overlay = mountOverlay(document, undefined, { onSave: (c) => void saved.push(c) });
+    overlay.update({ ...pageView, editor: { ...pageView.editor, pageCategories: ["Exam", "Formative"] } });
+    const root = openSettings();
+    expect((root.querySelector(".xbox") as HTMLElement).style.display).toBe("");
+    const chips = [...root.querySelectorAll(".xbox .chips .chip")].map((c) => c.textContent);
+    expect(chips).toEqual(["+ Formative"]);
+    (root.querySelector(".xbox .chips .chip") as HTMLElement).click();
+    setValue(root.querySelector(".xnum"), "20");
+    expect(root.querySelector(".xbox")?.textContent).toContain("Total with ManageBac's weights: 120%");
+    (root.querySelector(".btn.primary") as HTMLElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(saved[0]?.extraWeightings).toEqual([{ name: "Formative", weight: 20 }]);
+  });
+
+  it("hides the extra categories when the weights are the user's own", () => {
+    const overlay = mountOverlay(document);
+    overlay.update(pageView);
+    const root = openSettings();
+    const box = root.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    box.checked = false;
+    box.dispatchEvent(new Event("change"));
+    expect((root.querySelector(".xbox") as HTMLElement).style.display).toBe("none");
   });
 
   it("re-attaches itself when the page replaces the body", () => {

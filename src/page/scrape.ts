@@ -33,8 +33,9 @@ export function scrapeTasks(root: ParentNode): ScrapedTasks {
     }
     const labels = [...card.querySelectorAll(".label-and-due .label")].map((el) => clean(el.textContent)).filter(Boolean);
     const type = labels.find((label) => TYPE_LABEL.test(label)) ?? null;
-    const category = labels.find((label) => !TYPE_LABEL.test(label)) ?? UNCATEGORISED;
-    tasks.push({ title, type, category, labels, score: points.score, max: points.max });
+    // ManageBac shows the type first and the task category second. The category can have the same
+    // name as the type (a "Formative" category on a Formative task), so do not filter it out.
+    const category = labels[1] ?? labels[0] ?? UNCATEGORISED;    tasks.push({ title, type, category, labels, score: points.score, max: points.max });
   }
   return { tasks, ungraded };
 }

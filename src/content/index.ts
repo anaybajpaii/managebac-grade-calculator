@@ -30,6 +30,7 @@ async function onSave(change: EditorSave): Promise<void> {
     weightings: change.weightings,
     method: change.method,
     weightSource: change.weightSource,
+    ...(change.extraWeightings.length > 0 ? { extraWeightings: change.extraWeightings } : {}),
     ...(change.subjectName ? { subjectName: change.subjectName } : {}),
     ...(change.level ? { level: change.level } : {}),
     ...(change.customStarts ? { customStarts: change.customStarts } : {}),

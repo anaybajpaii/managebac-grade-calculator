@@ -68,5 +68,10 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px s
 .btn:disabled { opacity: .5; cursor: default; }
 .locked .adds, .locked .chips, .locked .x { display: none; }
 input:disabled { color: var(--muted); border-color: var(--rule); background: transparent; }
+.xbox { margin-top: 16px; }
+.xbox h4 { margin: 0 0 4px; font: 600 14px var(--sans); }
+.xbox .small { margin: 0 0 10px; }
+.xname { flex: 1; min-width: 0; }
+.xnum { width: 76px; flex: none; text-align: right; }
 .foot { padding: 10px 20px 14px; font: italic 12.5px var(--serif); color: var(--muted); border-top: 1px solid var(--rule); }
 `;

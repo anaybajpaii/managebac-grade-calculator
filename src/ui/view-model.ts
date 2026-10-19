@@ -18,6 +18,8 @@ export interface EditorModel {
   /** Weights ManageBac shows for this class, if the page has them. */
   pageWeights: PageWeight[] | null;
   usePageWeights: boolean;
+  /** Extra categories counted on top of the page's weights. */
+  extraWeightings: Weighting[];
   method: CategoryMethod;
   subjectName: string | null;
   level: "SL" | "HL" | null;
@@ -66,7 +68,11 @@ export function buildView(input: ViewInput): OverlayView {
   const pageWeights = input.pageWeights && input.pageWeights.length > 0 ? input.pageWeights : null;
   const source = settings.weightSource ?? (isDefaultWeightings(settings.weightings) ? "page" : "custom");
   const usePageWeights = source === "page" && pageWeights !== null;
-  const weightings: Weighting[] = usePageWeights ? (pageWeights ?? []) : settings.weightings;
+  const extras = usePageWeights ? (settings.extraWeightings ?? []) : [];
+  const pageNames = new Set((pageWeights ?? []).map((w) => w.name.trim().toLowerCase()));
+  const weightings: Weighting[] = usePageWeights
+    ? [...(pageWeights ?? []), ...extras.filter((w) => !pageNames.has(w.name.trim().toLowerCase()))]
+    : settings.weightings;
   const name = settings.subjectName ?? info.title;
   const level = settings.level ?? info.level;
   const subject = level ? resolveSubject(boundaries, name, level, timezone) : undefined;
@@ -125,9 +131,10 @@ export function buildView(input: ViewInput): OverlayView {
     note,
     weightsFromPage: usePageWeights,
     editor: {
-      weightings: weightings.map((w) => ({ ...w })),
+      weightings: (usePageWeights ? (pageWeights ?? []) : settings.weightings).map((w) => ({ ...w })),
       pageWeights: pageWeights ? pageWeights.map((w) => ({ ...w })) : null,
       usePageWeights,
+      extraWeightings: (settings.extraWeightings ?? []).map((w) => ({ ...w })),
       method: settings.method,
       subjectName: settings.subjectName ?? null,
       level: settings.level ?? null,

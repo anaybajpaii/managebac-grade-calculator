@@ -89,8 +89,7 @@ function renderCategories(doc: Document, view: OverlayView): HTMLElement {
     section.append(el(doc, "div", "small", "Weights read from ManageBac"));
   }
   if (view.unassigned.length > 0) {
-    section.append(el(doc, "div", "small", `Not weighted yet: ${view.unassigned.join(", ")}`));
-  }
+    section.append(el(doc, "div", "small", `Not weighted yet: ${view.unassigned.join(", ")}. Open settings to count them.`));  }
   if (view.ungraded > 0) {
     const noun = view.ungraded === 1 ? "task" : "tasks";
     section.append(el(doc, "div", "small", `${view.ungraded} ${noun} not counted (no points score)`));
@@ -259,6 +258,93 @@ function renderSettings(
     syncWeights();
   });
 
+  
+  // Extra categories: ones ManageBac does not weight (often Formative) but that should still count.
+  const extraRows = el(doc, "div", "wrows");
+  const extraInputs: { name: HTMLInputElement; weight: HTMLInputElement }[] = [];
+  const extraChips = el(doc, "div", "chips");
+  const extraTotal = el(doc, "div", "small");
+  const pageNames = new Set((model.pageWeights ?? []).map((w) => w.name.trim().toLowerCase()));
+
+  function updateExtraTotal(): void {
+    const extra = extraInputs.reduce((acc, r) => acc + (Number(r.weight.value.replace(",", ".")) || 0), 0);
+    const base = (model.pageWeights ?? []).reduce((acc, w) => acc + w.weight, 0);
+    const sum = base + extra;
+    extraTotal.textContent =
+      extra === 0
+        ? ""
+        : sum === 100
+          ? "Total 100%"
+          : `Total with ManageBac's weights: ${formatNumber(sum)}% (scaled to add up to 100%)`;
+  }
+
+  function refreshExtraChips(): void {
+    extraChips.replaceChildren();
+    const used = new Set(extraInputs.map((r) => r.name.value.trim().toLowerCase()));
+    for (const name of model.pageCategories) {
+      const key = name.trim().toLowerCase();
+      if (pageNames.has(key) || used.has(key)) continue;
+      const chip = el(doc, "button", "chip", `+ ${name}`);
+      chip.type = "button";
+      chip.addEventListener("click", () => {
+        addExtra(name, "");
+        updateExtraTotal();
+        refreshExtraChips();
+        extraInputs[extraInputs.length - 1]?.weight.focus();
+      });
+      extraChips.append(chip);
+    }
+  }
+
+  function addExtra(name: string, weight: string): void {
+    const nameInput = textInput(doc, name, "xname", "Category");
+    const weightInput = numberInput(doc, weight, "xnum", "%");
+    const remove = el(doc, "button", "x", "×");
+    remove.type = "button";
+    remove.setAttribute("aria-label", `Remove ${name || "category"}`);
+    const entry = { name: nameInput, weight: weightInput };
+    extraInputs.push(entry);
+    const line = el(doc, "div", "wrow", nameInput, weightInput, el(doc, "span", "pc", "%"), remove);
+    remove.addEventListener("click", () => {
+      extraInputs.splice(extraInputs.indexOf(entry), 1);
+      line.remove();
+      updateExtraTotal();
+      refreshExtraChips();
+    });
+    weightInput.addEventListener("input", updateExtraTotal);
+    nameInput.addEventListener("input", refreshExtraChips);
+    extraRows.append(line);
+  }
+
+  for (const w of model.extraWeightings) addExtra(w.name, formatNumber(w.weight));
+  updateExtraTotal();
+  refreshExtraChips();
+
+  const addExtraButton = el(doc, "button", "chip", "+ Add extra category");
+  addExtraButton.type = "button";
+  addExtraButton.addEventListener("click", () => {
+    addExtra("", "");
+    updateExtraTotal();
+    extraInputs[extraInputs.length - 1]?.name.focus();
+  });
+
+  const extraBox = el(
+    doc,
+    "div",
+    "xbox",
+    el(doc, "h4", undefined, "Also count these"),
+    el(doc, "div", "small", "Categories ManageBac does not weight, such as Formative. Pick one below and give it a weight."),
+    extraRows,
+    extraTotal,
+    extraChips,
+    el(doc, "div", "adds", addExtraButton),
+  );
+  function syncExtras(): void {
+    extraBox.style.display = usePage.checked && model.pageWeights !== null ? "" : "none";
+  }
+  usePage.addEventListener("change", syncExtras);
+  syncExtras();
+
   const addButton = el(doc, "button", "chip", "+ Add category");
   addButton.type = "button";
   addButton.addEventListener("click", () => {
@@ -337,6 +423,7 @@ function renderSettings(
     return {
       weightings: rowInputs.map((r) => ({ name: r.name.value, weight: r.weight.value })),
       usePage: usePage.checked && model.pageWeights !== null,
+      extras: extraInputs.map((r) => ({ name: r.name.value, weight: r.weight.value })),
       method: method.value,
       subjectName: subject.value,
       level: level.value,
@@ -388,6 +475,7 @@ function renderSettings(
     rows,
     total,
     chips,
+    extraBox,
     el(doc, "div", "adds", addButton),
     el(doc, "div", "small", 'A single row named "All tasks" counts every task equally.'),
   );
