@@ -106,4 +106,99 @@ describe("buildView", () => {
     const view = buildView({ ...base, info: { title: single.name, level: "SL" }, tasks: [task("Tests", 60, 100)] });
     expect(view.detail).toBe("SL");
   });
+
+  
+  it("uses the subject and level chosen in settings", () => {
+    const view = buildView({
+      ...base,
+      info: { title: "Some odd class name", level: null },
+      settings: { ...defaultSettings(), subjectName: "PHYSICS", level: "HL" },
+      tasks: [task("Tests", 70, 100)],
+    });
+    expect(view.grade).toBe(6);
+    expect(view.detail).toBe("HL · Timezone 1");
+    expect(view.editor.subjectName).toBe("PHYSICS");
+    expect(view.editor.level).toBe("HL");
+  });
+
+  it("predicts from own boundaries, even without a matched subject", () => {
+    const settings: ClassSettings = { ...defaultSettings(), customStarts: [10, 25, 40, 55, 70, 85] };
+    const view = buildView({
+      ...base,
+      info: { title: "Theory of Knowledge", level: "HL" },
+      settings,
+      tasks: [task("Tests", 72, 100)],
+    });
+    expect(view.grade).toBe(6);
+    expect(view.next?.grade).toBe(7);
+    expect(view.next?.needed).toBeCloseTo(13);
+    expect(view.boundariesLabel).toBe("Your own boundaries");
+    view.ticks.forEach((t, i) => expect(t.at).toBeCloseTo([10, 25, 40, 55, 70, 85][i] ?? -1));
+    expect(view.note).toBeNull();
+  });
+
+  it("gives the editor what it needs", () => {
+    const view = buildView({ ...base, tasks: [task("Tests", 70, 100), task("Quizzes", 5, 10)] });
+    expect(view.editor.weightings).toEqual(base.settings.weightings);
+    expect(view.editor.timezone).toBe(1);
+    expect(view.editor.pageCategories).toEqual(["Tests", "Quizzes"]);
+    expect(view.editor.officialStarts).toHaveLength(6);
+    expect(view.editor.subjectNames).toContain("PHYSICS");
+    expect(view.editor.customStarts).toBeNull();
+  });
+
+  it("points the user to settings when nothing matches", () => {
+    const view = buildView({ ...base, info: { title: "Theory of Knowledge", level: "HL" }, tasks: [task("Tests", 60, 100)] });
+    expect(view.note).toMatch(/settings/i);
+  });
+
+  it("uses the weights ManageBac shows when the class has none saved", () => {
+    const view = buildView({
+      ...base,
+      pageWeights: [
+        { name: "Tests", weight: 75 },
+        { name: "Assignment", weight: 25 },
+      ],
+      tasks: [task("Tests", 80, 100), task("Assignment", 40, 100)],
+    });
+    expect(view.percent).toBeCloseTo(70);
+    expect(view.weightsFromPage).toBe(true);
+    expect(view.rows.map((r) => r.weight)).toEqual([75, 25]);
+    expect(view.editor.usePageWeights).toBe(true);
+    expect(view.editor.pageWeights).toHaveLength(2);
+  });
+
+  it("keeps the user's own weights when they chose them", () => {
+    const settings: ClassSettings = {
+      ...defaultSettings(),
+      weightings: [{ name: "Tests", weight: 100 }],
+    };
+    const view = buildView({
+      ...base,
+      settings,
+      pageWeights: [{ name: "Tests", weight: 10 }, { name: "Other", weight: 90 }],
+      tasks: [task("Tests", 80, 100), task("Other", 0, 100)],
+    });
+    expect(view.percent).toBeCloseTo(80);
+    expect(view.weightsFromPage).toBe(false);
+    expect(view.editor.pageWeights).toHaveLength(2);
+  });
+
+  it("respects an explicit choice either way", () => {
+    const pageWeights = [{ name: "Tests", weight: 100 }];
+    const custom: ClassSettings = { ...defaultSettings(), weightSource: "custom" };
+    expect(buildView({ ...base, settings: custom, pageWeights, tasks: [task("Tests", 50, 100)] }).weightsFromPage).toBe(false);
+    const page: ClassSettings = {
+      ...defaultSettings(),
+      weightings: [{ name: "Mine", weight: 100 }],
+      weightSource: "page",
+    };
+    expect(buildView({ ...base, settings: page, pageWeights, tasks: [task("Tests", 50, 100)] }).weightsFromPage).toBe(true);
+  });
+
+  it("falls back to saved weights when the page has none", () => {
+    const view = buildView({ ...base, pageWeights: null, tasks: [task("Tests", 50, 100)] });
+    expect(view.weightsFromPage).toBe(false);
+    expect(view.editor.pageWeights).toBeNull();
+  });
 });

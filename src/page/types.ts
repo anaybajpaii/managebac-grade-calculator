@@ -16,3 +16,8 @@ export interface ClassInfo {
   title: string;
   level: "SL" | "HL" | null;
 }
+
+export interface PageWeight {
+  name: string;
+  weight: number;
+}

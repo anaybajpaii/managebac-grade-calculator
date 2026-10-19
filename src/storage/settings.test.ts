@@ -147,3 +147,42 @@ describe("classIdFromUrl", () => {
     expect(classIdFromUrl("not a url")).toBeNull();
   });
 });
+
+
+describe("subject, level and own boundaries", () => {
+  it("keeps valid overrides", () => {
+    const result = normalizeSettings({
+      weightings: [{ name: "Exams", weight: 100 }],
+      method: "average",
+      subjectName: "  PHYSICS ",
+      level: "HL",
+      customStarts: [10, 25, 40, 55, 70, 85],
+    });
+    expect(result.subjectName).toBe("PHYSICS");
+    expect(result.level).toBe("HL");
+    expect(result.customStarts).toEqual([10, 25, 40, 55, 70, 85]);
+  });
+
+  it("drops invalid overrides instead of keeping them", () => {
+    const result = normalizeSettings({ subjectName: "  ", level: "XL", customStarts: [5, 4, 3, 2, 1, 0] });
+    expect(result).toEqual(defaultSettings());
+    expect("subjectName" in result).toBe(false);
+    expect("customStarts" in result).toBe(false);
+  });
+
+  it("round-trips overrides per class", async () => {
+    const store = createMemoryStore();
+    const settings: ClassSettings = { ...physics, subjectName: "PHYSICS", level: "SL", customStarts: [10, 20, 30, 40, 50, 60] };
+    await saveSettings(store, "111", settings);
+    expect(await loadSettings(store, "111")).toEqual(settings);
+    expect(await loadSettings(store, "222")).toEqual(defaultSettings());
+  });
+});
+
+describe("weight source", () => {
+  it("keeps a valid choice and drops anything else", () => {
+    expect(normalizeSettings({ weightSource: "page" }).weightSource).toBe("page");
+    expect(normalizeSettings({ weightSource: "custom" }).weightSource).toBe("custom");
+    expect("weightSource" in normalizeSettings({ weightSource: "nope" })).toBe(false);
+  });
+});

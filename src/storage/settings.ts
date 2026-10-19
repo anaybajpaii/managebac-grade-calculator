@@ -1,4 +1,5 @@
 import { CATCH_ALL } from "../engine/categories";
+import { validateStarts } from "../engine/custom-bounds";
 import type { CategoryMethod } from "../engine/types";
 import type { KeyValueStore } from "./store";
 import type { ClassSettings, Weighting } from "./types";
@@ -44,11 +45,21 @@ export function normalizeSettings(raw: unknown): ClassSettings {
   if (typeof raw !== "object" || raw === null) return defaults;
   const record = raw as Record<string, unknown>;
   const weightings = cleanWeightings(record.weightings);
-  return {
+  const result: ClassSettings = {
     version: 1,
     weightings: weightings.length > 0 ? weightings : defaults.weightings,
     method: isMethod(record.method) ? record.method : defaults.method,
   };
+  if (record.weightSource === "page" || record.weightSource === "custom") result.weightSource = record.weightSource;
+  if (typeof record.subjectName === "string" && record.subjectName.trim() !== "") {
+    result.subjectName = record.subjectName.trim();
+  }
+  if (record.level === "SL" || record.level === "HL") result.level = record.level;
+  const starts = record.customStarts;
+  if (Array.isArray(starts) && starts.every((n) => typeof n === "number") && validateStarts(starts) === null) {
+    result.customStarts = [...starts];
+  }
+  return result;
 }
 
 export async function loadSettings(store: KeyValueStore, classId: string): Promise<ClassSettings> {

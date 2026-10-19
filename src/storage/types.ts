@@ -9,4 +9,17 @@ export interface ClassSettings {
   version: 1;
   weightings: Weighting[];
   method: CategoryMethod;
+  /** Overrides the subject read from the page (an IB subject name from the boundaries file). */
+    /** "page": use the weights ManageBac shows for the class. "custom": use `weightings`. Absent: automatic. */
+  weightSource?: "page" | "custom";
+  subjectName?: string;
+  /** Overrides the level read from the page. */
+  level?: "SL" | "HL";
+  /** Own boundaries: minimum overall % for grades 2 to 7. Replaces the IB ones. */
+  customStarts?: number[];
+}
+
+export interface GlobalSettings {
+  version: 1;
+  timezone: number;
 }

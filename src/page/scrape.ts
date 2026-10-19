@@ -1,4 +1,4 @@
-import type { ClassInfo, ScrapedTask, ScrapedTasks } from "./types";
+import type { ClassInfo, PageWeight, ScrapedTask, ScrapedTasks } from "./types";
 
 const POINTS = /^\s*(-?\d+(?:[.,]\d+)?)\s*\/\s*(\d+(?:[.,]\d+)?)\s*(?:pts?|points?)?\s*$/i;
 const TYPE_LABEL = /^(summative|formative)$/i;
@@ -50,4 +50,69 @@ export function scrapeClassInfo(doc: ParentNode): ClassInfo {
     }
   }
   return { title, level };
+}
+
+
+const PERCENT_ONLY = /^\s*(\d+(?:[.,]\d+)?)\s*%\s*$/;
+const HEADING = /^task categories$/i;
+const HEADING_TAGS = "h1, h2, h3, h4, h5, h6, div, span, p, strong, b, th, button, a, legend";
+
+function isLeaf(node: Element): boolean {
+  return node.children.length === 0;
+}
+
+function findHeading(root: ParentNode): Element | null {
+  let found: Element | null = null;
+  for (const node of root.querySelectorAll(HEADING_TAGS)) {
+    if (!HEADING.test(clean(node.textContent))) continue;
+    // Keep the deepest match: the one with no child carrying the same text.
+    found = node;
+  }
+  return found;
+}
+
+function percentLeaves(container: Element): Element[] {
+  return [...container.querySelectorAll("*")].filter((node) => isLeaf(node) && PERCENT_ONLY.test(clean(node.textContent)));
+}
+
+/**
+ * Reads the "Task Categories" box ManageBac shows next to the tasks (category name and its
+ * weight). Works by looking for the heading text and then for "NN%" cells, so it does not
+ * depend on ManageBac's class names.
+ */
+export function scrapeWeights(root: ParentNode): PageWeight[] | null {
+  const heading = findHeading(root);
+  if (!heading) return null;
+
+  let container: Element | null = heading;
+  for (let depth = 0; depth < 6 && container; depth++) {
+    container = container.parentElement;
+    if (container && percentLeaves(container).length > 0) break;
+  }
+  if (!container) return null;
+  const box = container;
+
+  const result: PageWeight[] = [];
+  const seen = new Set<string>();
+  for (const leaf of percentLeaves(box)) {
+    const percentText = clean(leaf.textContent);
+    let name = "";
+    for (let row: Element | null = leaf.parentElement; row && box.contains(row); row = row.parentElement) {
+      if (percentLeaves(row).length !== 1) break;
+      const residue = clean(row.textContent).replace(percentText, "").trim();
+      if (residue !== "") {
+        name = residue;
+        break;
+      }
+    }
+    if (name === "") name = clean(leaf.previousElementSibling?.textContent);
+    if (name === "" || HEADING.test(name)) continue;
+    const weight = toNumber((PERCENT_ONLY.exec(percentText)?.[1] ?? "").trim());
+    if (!Number.isFinite(weight)) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push({ name, weight });
+  }
+  return result.length > 0 ? result : null;
 }

@@ -39,5 +39,34 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .row.none .p { color: var(--muted); font-style: italic; font-weight: 400; }
 .note { padding: 0 20px 14px; font: italic 14px var(--serif); color: var(--ink); }
 .small { margin-top: 6px; font-size: 13px; color: var(--muted); }
+.acts { display: flex; gap: 16px; }
+.form .sec { padding: 16px 20px 14px; }
+.wrows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.wrow { display: flex; align-items: center; gap: 8px; }
+input, select { box-sizing: border-box; width: 100%; padding: 8px 10px; font: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--ink); border-radius: 4px; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--muted); outline-offset: 1px; }
+.wname { flex: 1; min-width: 0; }
+.wnum { width: 76px; flex: none; text-align: right; }
+.pc { color: var(--muted); }
+.x { width: 30px; height: 30px; flex: none; font-size: 20px; line-height: 1; color: var(--muted); border: 1.5px solid var(--rule); border-radius: 4px; }
+.x:hover { color: var(--ink); border-color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+.adds { margin: 10px 0 0; }
+.chips:empty { display: none; }
+.chip { padding: 6px 12px; font-size: 13.5px; border: 1.5px solid var(--rule); border-radius: 999px; }
+.chip:hover { border-color: var(--ink); }
+.field { display: block; margin: 0 0 12px; }
+.field span { display: block; margin: 0 0 4px; font-size: 13px; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); }
+.starts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.start { margin: 0; }
+.err { min-height: 1.4em; margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.btns { display: flex; gap: 10px; margin: 0 0 14px; }
+.btn { padding: 10px 22px; font-weight: 600; border: 2px solid var(--ink); border-radius: 4px; }
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn:disabled { opacity: .5; cursor: default; }
+.locked .adds, .locked .chips, .locked .x { display: none; }
+input:disabled { color: var(--muted); border-color: var(--rule); background: transparent; }
 .foot { padding: 10px 20px 14px; font: italic 12.5px var(--serif); color: var(--muted); border-top: 1px solid var(--rule); }
 `;
