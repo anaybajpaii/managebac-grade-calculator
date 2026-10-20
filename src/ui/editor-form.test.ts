@@ -12,6 +12,8 @@ const good: RawForm = {
   subjectName: "",
   level: "HL",
   timezone: "2",
+  tone: "olive",
+  mode: "dark",
   useCustom: false,
   starts: ["", "", "", "", "", ""],
 };
@@ -37,6 +39,8 @@ describe("parseForm", () => {
         subjectName: null,
         level: "HL",
         timezone: 2,
+        tone: "olive",
+        mode: "dark",
         customStarts: null,
       },
     });
@@ -113,6 +117,13 @@ describe("extra categories", () => {
     expect(
       error({ ...withExtras, extras: [{ name: "F", weight: "1" }, { name: "f", weight: "2" }] }),
     ).toMatch(/twice/);
+  });
+});
+
+describe("appearance", () => {
+  it("falls back to the default look for unknown values", () => {
+    const result = parseForm({ ...good, tone: "neon", mode: "dim" });
+    expect(result.ok && result.value).toMatchObject({ tone: "mono", mode: "light" });
   });
 });
 

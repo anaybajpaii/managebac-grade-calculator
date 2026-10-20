@@ -1,3 +1,4 @@
+import { DEFAULT_APPEARANCE, isMode, isTone, type ModeId, type ToneId } from "../appearance";
 import { CATCH_ALL } from "../engine/categories";
 import { START_COUNT, validateStarts } from "../engine/custom-bounds";
 import type { CategoryMethod } from "../engine/types";
@@ -12,6 +13,8 @@ export interface EditorSave {
   subjectName: string | null;
   level: "SL" | "HL" | null;
   timezone: number;
+  tone: ToneId;
+  mode: ModeId;
   customStarts: number[] | null;
 }
 
@@ -23,6 +26,8 @@ export interface RawForm {
   subjectName: string;
   level: string;
   timezone: string;
+  tone: string;
+  mode: string;
   useCustom: boolean;
   starts: string[];
 }
@@ -120,6 +125,8 @@ function finish(
       subjectName: raw.subjectName.trim() === "" ? null : raw.subjectName.trim(),
       level: raw.level === "SL" || raw.level === "HL" ? raw.level : null,
       timezone,
+      tone: isTone(raw.tone) ? raw.tone : DEFAULT_APPEARANCE.tone,
+      mode: isMode(raw.mode) ? raw.mode : DEFAULT_APPEARANCE.mode,
       customStarts,
     },
   };

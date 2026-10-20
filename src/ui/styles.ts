@@ -1,13 +1,50 @@
+import type { ToneId } from "../appearance";
+
+interface ToneColours {
+  bg: string;
+  ink: string;
+  muted: string;
+  rule: string;
+  accent: string;
+  tabInk: string;
+  tabMuted: string;
+  /** Accent used on dark backgrounds. */
+  accentDark: string;
+}
+
+const TONE_COLOURS: Record<ToneId, ToneColours> = {
+  mono: { bg: "#ffffff", ink: "#111111", muted: "#666666", rule: "#d6d6d6", accent: "#111111", tabInk: "#ffffff", tabMuted: "#bdbdbd", accentDark: "#f1f1f1" },
+  olive: { bg: "#fbfaf4", ink: "#2b2f1f", muted: "#6b7058", rule: "#dcdcc8", accent: "#5c6b2f", tabInk: "#ffffff", tabMuted: "#d8e0bd", accentDark: "#a9bd62" },
+  clay: { bg: "#fcf8f4", ink: "#3a2418", muted: "#7a6455", rule: "#e6d8cc", accent: "#b0562f", tabInk: "#ffffff", tabMuted: "#f1d3c4", accentDark: "#e0916a" },
+  slate: { bg: "#f7f9fb", ink: "#1d2733", muted: "#5f6c7b", rule: "#d5dde6", accent: "#3d5a80", tabInk: "#ffffff", tabMuted: "#c9d6e6", accentDark: "#8fb0d6" },
+  ink: { bg: "#f8f8fb", ink: "#14142b", muted: "#5d5d78", rule: "#d9d9e6", accent: "#14142b", tabInk: "#ffffff", tabMuted: "#b8b8d0", accentDark: "#9aa0ff" },
+};
+
+function lightVars(c: ToneColours): string {
+  return `--bg: ${c.bg}; --ink: ${c.ink}; --muted: ${c.muted}; --rule: ${c.rule}; --accent: ${c.accent}; --tab-bg: ${c.accent}; --tab-ink: ${c.tabInk}; --tab-muted: ${c.tabMuted}; --t-accent-dark: ${c.accentDark};`;
+}
+
+const TONE_RULES = (Object.keys(TONE_COLOURS) as ToneId[])
+  .map((id) => `.root[data-tone="${id}"] { ${lightVars(TONE_COLOURS[id])} }`)
+  .join("\n");
+
+// Neutral dark surfaces; the tone only supplies the accent colour.
+const DARK_VARS =
+  "color-scheme: dark; --bg: #161616; --ink: #f1f1f1; --muted: #a3a3a3; --rule: #353535; --accent: var(--t-accent-dark); --tab-bg: var(--t-accent-dark); --tab-ink: #111111; --tab-muted: #3a3a3a;";
+
 export const STYLES = `
 :host { all: initial; position: fixed; right: 0; bottom: 0; z-index: 2147483000; }
 .root {
-  --bg: #ffffff; --ink: #111111; --muted: #666666; --rule: #d6d6d6; --accent: #111111;
-  --tab-bg: #111111; --tab-ink: #ffffff; --tab-muted: #bdbdbd;
+  ${lightVars(TONE_COLOURS.mono)}
+  color-scheme: light;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
   display: flex; flex-direction: column; align-items: flex-end;
   font: 15px/1.45 var(--sans); color: var(--ink);
 }
+${TONE_RULES}
+.root[data-mode="dark"] { ${DARK_VARS} }
+@media (prefers-color-scheme: dark) { .root[data-mode="auto"] { ${DARK_VARS} } }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .tab { display: flex; align-items: center; gap: 14px; margin: 0 0 24px; padding: 12px 20px 12px 16px; background: var(--tab-bg); color: var(--tab-ink); border: 2px solid var(--tab-bg); border-right: 0; border-radius: 6px 0 0 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, .25); }
 .tab .g { font: 600 38px/1 var(--sans); }

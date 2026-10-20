@@ -35,7 +35,7 @@ async function onSave(change: EditorSave): Promise<void> {
     ...(change.level ? { level: change.level } : {}),
     ...(change.customStarts ? { customStarts: change.customStarts } : {}),
   });
-  await saveGlobal(store, { version: 1, timezone: change.timezone });
+  await saveGlobal(store, { version: 1, timezone: change.timezone, tone: change.tone, mode: change.mode });
   await refresh();
 }
 
@@ -71,11 +71,11 @@ async function refresh(): Promise<void> {
     overlay?.update(null);
     return;
   }
-  const [settings, { timezone }] = await Promise.all([loadSettings(store, classId), loadGlobal(store)]);
+  const [settings, { timezone, tone, mode }] = await Promise.all([loadSettings(store, classId), loadGlobal(store)]);
   const info = scrapeClassInfo(document);
   const { tasks, ungraded } = scrapeTasks(document);
   const pageWeights = scrapeWeights(document);
-  const view = buildView({ tasks, ungraded, info, settings, boundaries, timezone, pageWeights });
+  const view = buildView({ tasks, ungraded, info, settings, boundaries, timezone, pageWeights, appearance: { tone, mode } });
   overlay ??= mountOverlay(document, store, { onSave, onReset });
   overlay.update(view);
 }

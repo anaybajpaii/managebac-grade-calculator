@@ -252,4 +252,10 @@ describe("buildView", () => {
     const view = buildView({ ...base, info: { title: "Theory of Knowledge", level: "HL" }, tasks: [task("Tests", 60, 100)] });
     expect(view.whatIf).toBeNull();
   });
+
+  it("passes the appearance through, defaulting to black and white", () => {
+    expect(buildView({ ...base, tasks: [task("Tests", 70, 100)] }).appearance).toEqual({ tone: "mono", mode: "light" });
+    const view = buildView({ ...base, tasks: [], appearance: { tone: "slate", mode: "auto" } });
+    expect(view.appearance).toEqual({ tone: "slate", mode: "auto" });
+  });
 });

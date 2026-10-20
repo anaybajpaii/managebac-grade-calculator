@@ -24,6 +24,7 @@ const view: OverlayView = {
   unassigned: ["Quizzes"],
   note: null,
   weightsFromPage: false,
+  appearance: { tone: "mono", mode: "light" },
   whatIf: {
     method: "average",
     overall: { max: 100, bands: [[0, 9], [10, 24], [25, 39], [40, 54], [55, 69], [70, 84], [85, 100]] },
@@ -217,6 +218,8 @@ describe("overlay", () => {
         subjectName: null,
         level: null,
         timezone: 3,
+        tone: "mono",
+        mode: "light",
         customStarts: null,
       },
     ]);
@@ -354,6 +357,49 @@ describe("overlay", () => {
     box.checked = false;
     box.dispatchEvent(new Event("change"));
     expect((root.querySelector(".xbox") as HTMLElement).style.display).toBe("none");
+  });
+
+  describe("appearance", () => {
+    it("puts the chosen tone and brightness on the root", () => {
+      const overlay = mountOverlay(document);
+      overlay.update({ ...view, appearance: { tone: "clay", mode: "dark" } });
+      const root = shadowOf(host()).querySelector(".root") as HTMLElement;
+      expect(root.dataset.tone).toBe("clay");
+      expect(root.dataset.mode).toBe("dark");
+    });
+
+    it("previews a change live in settings and saves it", async () => {
+      const saved: { tone: string; mode: string }[] = [];
+      const overlay = mountOverlay(document, undefined, { onSave: (c) => void saved.push(c) });
+      overlay.update(view);
+      const root = openSettings();
+      const selects = root.querySelectorAll<HTMLSelectElement>(".form select");
+      const tone = [...selects].find((s) => [...s.options].some((o) => o.value === "olive")) as HTMLSelectElement;
+      const mode = [...selects].find((s) => [...s.options].some((o) => o.value === "auto")) as HTMLSelectElement;
+      tone.value = "olive";
+      tone.dispatchEvent(new Event("change"));
+      mode.value = "auto";
+      mode.dispatchEvent(new Event("change"));
+      const rootEl = root.querySelector(".root") as HTMLElement;
+      expect(rootEl.dataset.tone).toBe("olive");
+      expect(rootEl.dataset.mode).toBe("auto");
+      (root.querySelector(".btn.primary") as HTMLElement).click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(saved[0]).toMatchObject({ tone: "olive", mode: "auto" });
+    });
+
+    it("goes back to the saved look when settings are cancelled", () => {
+      const overlay = mountOverlay(document);
+      overlay.update(view);
+      const root = openSettings();
+      const tone = [...root.querySelectorAll<HTMLSelectElement>(".form select")].find((s) =>
+        [...s.options].some((o) => o.value === "olive"),
+      ) as HTMLSelectElement;
+      tone.value = "olive";
+      tone.dispatchEvent(new Event("change"));
+      (root.querySelector(".btn:not(.primary)") as HTMLElement).click();
+      expect((root.querySelector(".root") as HTMLElement).dataset.tone).toBe("mono");
+    });
   });
 
   describe("what if", () => {

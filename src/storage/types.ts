@@ -1,3 +1,4 @@
+import type { ModeId, ToneId } from "../appearance";
 import type { CategoryMethod } from "../engine/types";
 
 export interface Weighting {
@@ -24,4 +25,6 @@ export interface ClassSettings {
 export interface GlobalSettings {
   version: 1;
   timezone: number;
+  tone: ToneId;
+  mode: ModeId;
 }

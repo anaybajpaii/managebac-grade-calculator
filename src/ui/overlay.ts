@@ -1,3 +1,4 @@
+import { MODES, TONES, type Appearance } from "../appearance";
 import { START_COUNT } from "../engine/custom-bounds";
 import { TIMEZONES } from "../storage/global";
 import type { KeyValueStore } from "../storage/store";
@@ -194,6 +195,7 @@ function renderSettings(
   view: OverlayView,
   handlers: OverlayHandlers,
   onDone: () => void,
+  onPreview: (appearance: Appearance) => void,
 ): HTMLElement {
   const model: EditorModel = view.editor;
 
@@ -401,6 +403,17 @@ function renderSettings(
     String(model.timezone),
   );
 
+  // Appearance (applies to every class, previewed live)
+  const tone = dropdown(doc, TONES.map((t): [string, string] => [t.id, t.label]), view.appearance.tone);
+  const mode = dropdown(doc, MODES.map((m): [string, string] => [m.id, m.label]), view.appearance.mode);
+  function preview(): void {
+    const toneValue = TONES.find((t) => t.id === tone.value)?.id ?? view.appearance.tone;
+    const modeValue = MODES.find((m) => m.id === mode.value)?.id ?? view.appearance.mode;
+    onPreview({ tone: toneValue, mode: modeValue });
+  }
+  tone.addEventListener("change", preview);
+  mode.addEventListener("change", preview);
+
   // Own boundaries
   const useCustom = el(doc, "input");
   useCustom.type = "checkbox";
@@ -444,6 +457,8 @@ function renderSettings(
       subjectName: subject.value,
       level: level.value,
       timezone: timezone.value,
+      tone: tone.value,
+      mode: mode.value,
       useCustom: useCustom.checked,
       starts: startInputs.map((i) => i.value),
     };
@@ -524,6 +539,14 @@ function renderSettings(
       doc,
       "div",
       "sec",
+      el(doc, "h3", undefined, "Appearance"),
+      labelled(doc, "Colour (all classes)", tone),
+      labelled(doc, "Brightness", mode),
+    ),
+    el(
+      doc,
+      "div",
+      "sec",
       el(doc, "h3", undefined, "Grade boundaries"),
       el(doc, "label", "check", useCustom, el(doc, "span", undefined, "Use my own boundaries")),
       custom,
@@ -578,8 +601,15 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
     const style = doc.createElement("style");
     style.textContent = STYLES;
     const root = el(doc, "div", "root");
+    root.dataset.tone = current.appearance.tone;
+    root.dataset.mode = current.appearance.mode;
     if (open && editing) {
-      root.append(renderSettings(doc, current, handlers, () => setEditing(false)));
+      root.append(
+        renderSettings(doc, current, handlers, () => setEditing(false), (appearance) => {
+          root.dataset.tone = appearance.tone;
+          root.dataset.mode = appearance.mode;
+        }),
+      );
     } else if (open) {
       root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), whatIfState));
     } else {
