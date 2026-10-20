@@ -46,7 +46,26 @@ async function onReset(): Promise<void> {
   await refresh();
 }
 
+// After the extension is reloaded or updated, pages that were already open keep running the old
+// script, and every chrome.* call throws "Extension context invalidated". Stop quietly instead.
+function extensionIsGone(): boolean {
+  return !chrome.runtime?.id;
+}
+
+function shutDown(): void {
+  window.clearTimeout(timer);
+  observer.disconnect();
+  for (const name of DOCUMENT_EVENTS) document.removeEventListener(name, schedule);
+  for (const name of WINDOW_EVENTS) window.removeEventListener(name, schedule);
+  overlay?.destroy();
+  overlay = null;
+}
+
 async function refresh(): Promise<void> {
+  if (extensionIsGone()) {
+    shutDown();
+    return;
+  }
   const classId = classIdFromUrl(location.href);
   if (!classId || !location.pathname.endsWith("/core_tasks")) {
     overlay?.update(null);
@@ -64,11 +83,15 @@ async function refresh(): Promise<void> {
 function schedule(): void {
   window.clearTimeout(timer);
   timer = window.setTimeout(() => {
-    refresh().catch((error) => console.error(TAG, error));
+    refresh().catch((error) => {
+      if (extensionIsGone()) shutDown();
+      else console.error(TAG, error);
+    });
   }, 400);
 }
 
+const observer = new MutationObserver(schedule);
 schedule();
-new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+observer.observe(document.documentElement, { childList: true, subtree: true });
 for (const name of DOCUMENT_EVENTS) document.addEventListener(name, schedule);
 for (const name of WINDOW_EVENTS) window.addEventListener(name, schedule);

@@ -73,5 +73,10 @@ input:disabled { color: var(--muted); border-color: var(--rule); background: tra
 .xbox .small { margin: 0 0 10px; }
 .xname { flex: 1; min-width: 0; }
 .xnum { width: 76px; flex: none; text-align: right; }
+.wi .wirow { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+.wi .wirow span { min-width: 92px; color: var(--muted); font-size: 14px; }
+.wi .wirow select { flex: 1; min-width: 0; }
+.wi .wnum { width: 90px; text-align: right; }
+.wires { min-height: 1.4em; margin: 0 0 14px; font: italic 15px var(--serif); color: var(--ink); }
 .foot { padding: 10px 20px 14px; font: italic 12.5px var(--serif); color: var(--muted); border-top: 1px solid var(--rule); }
 `;

@@ -148,7 +148,6 @@ describe("classIdFromUrl", () => {
   });
 });
 
-
 describe("subject, level and own boundaries", () => {
   it("keeps valid overrides", () => {
     const result = normalizeSettings({

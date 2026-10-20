@@ -3,6 +3,7 @@ import { TIMEZONES } from "../storage/global";
 import type { KeyValueStore } from "../storage/store";
 import { parseForm, prettySubject, type EditorSave, type RawForm } from "./editor-form";
 import { STYLES } from "./styles";
+import { initialWhatIfState, renderWhatIf, type WhatIfState } from "./whatif-panel";
 import type { EditorModel, OverlayView } from "./view-model";
 
 const OPEN_KEY = "ui:open";
@@ -89,7 +90,8 @@ function renderCategories(doc: Document, view: OverlayView): HTMLElement {
     section.append(el(doc, "div", "small", "Weights read from ManageBac"));
   }
   if (view.unassigned.length > 0) {
-    section.append(el(doc, "div", "small", `Not weighted yet: ${view.unassigned.join(", ")}. Open settings to count them.`));  }
+    section.append(el(doc, "div", "small", `Not weighted yet: ${view.unassigned.join(", ")}. Open settings to count them.`));
+  }
   if (view.ungraded > 0) {
     const noun = view.ungraded === 1 ? "task" : "tasks";
     section.append(el(doc, "div", "small", `${view.ungraded} ${noun} not counted (no points score)`));
@@ -104,7 +106,13 @@ function link(doc: Document, text: string, extra: string, onClick: () => void): 
   return button;
 }
 
-function renderPanel(doc: Document, view: OverlayView, onHide: () => void, onSettings: () => void): HTMLElement {
+function renderPanel(
+  doc: Document,
+  view: OverlayView,
+  onHide: () => void,
+  onSettings: () => void,
+  whatIfState: () => WhatIfState | null,
+): HTMLElement {
   const hide = link(doc, "hide", "hide", onHide);
   const settings = link(doc, "settings", "gear", onSettings);
 
@@ -129,9 +137,18 @@ function renderPanel(doc: Document, view: OverlayView, onHide: () => void, onSet
   if (scale) panel.append(scale);
   if (view.note) panel.append(el(doc, "div", "note", view.note));
   if (view.rows.length > 0) panel.append(renderCategories(doc, view));
+  const state = view.whatIf ? whatIfState() : null;
+  if (view.whatIf && state) {
+    const section = renderWhatIf(doc, view.whatIf, view.percent, state);
+    section.addEventListener("keydown", (event) => event.stopPropagation());
+    section.addEventListener("keyup", (event) => event.stopPropagation());
+    section.addEventListener("keypress", (event) => event.stopPropagation());
+    panel.append(section);
+  }
   panel.append(el(doc, "div", "foot", "Everything stays in your browser."));
   return panel;
 }
+
 
 function labelled(doc: Document, text: string, control: HTMLElement, className = "field"): HTMLElement {
   return el(doc, "label", className, el(doc, "span", undefined, text), control);
@@ -258,7 +275,6 @@ function renderSettings(
     syncWeights();
   });
 
-  
   // Extra categories: ones ManageBac does not weight (often Formative) but that should still count.
   const extraRows = el(doc, "div", "wrows");
   const extraInputs: { name: HTMLInputElement; weight: HTMLInputElement }[] = [];
@@ -475,7 +491,6 @@ function renderSettings(
     rows,
     total,
     chips,
-    extraBox,
     el(doc, "div", "adds", addButton),
     el(doc, "div", "small", 'A single row named "All tasks" counts every task equally.'),
   );
@@ -493,6 +508,7 @@ function renderSettings(
       el(doc, "h3", undefined, "Category weights"),
       ...(pageToggle ? [pageToggle] : []),
       weightBox,
+      extraBox,
     ),
     el(doc, "div", "sec", el(doc, "h3", undefined, "Counting"), method),
     el(
@@ -540,6 +556,17 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
   let editing = false;
   let current: OverlayView | null = null;
   let lastKey = "";
+  let whatIf: WhatIfState | null = null;
+
+  // Kept between redraws so numbers typed into "What if" survive the page updating.
+  function whatIfState(): WhatIfState | null {
+    if (!current?.whatIf) return null;
+    const known = current.whatIf.categories.some(
+      (c) => c.weight > 0 && c.name.trim().toLowerCase() === whatIf?.category.trim().toLowerCase(),
+    );
+    if (!whatIf || !known) whatIf = initialWhatIfState(current.whatIf, current.next?.grade ?? null);
+    return whatIf;
+  }
 
   function draw(): void {
     shadow.replaceChildren();
@@ -554,7 +581,7 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
     if (open && editing) {
       root.append(renderSettings(doc, current, handlers, () => setEditing(false)));
     } else if (open) {
-      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true)));
+      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), whatIfState));
     } else {
       root.append(renderTab(doc, current, () => setOpen(true)));
     }

@@ -35,7 +35,8 @@ export function scrapeTasks(root: ParentNode): ScrapedTasks {
     const type = labels.find((label) => TYPE_LABEL.test(label)) ?? null;
     // ManageBac shows the type first and the task category second. The category can have the same
     // name as the type (a "Formative" category on a Formative task), so do not filter it out.
-    const category = labels[1] ?? labels[0] ?? UNCATEGORISED;    tasks.push({ title, type, category, labels, score: points.score, max: points.max });
+    const category = labels[1] ?? labels[0] ?? UNCATEGORISED;
+    tasks.push({ title, type, category, labels, score: points.score, max: points.max });
   }
   return { tasks, ungraded };
 }
@@ -52,7 +53,6 @@ export function scrapeClassInfo(doc: ParentNode): ClassInfo {
   }
   return { title, level };
 }
-
 
 const PERCENT_ONLY = /^\s*(\d+(?:[.,]\d+)?)\s*%\s*$/;
 const HEADING = /^task categories$/i;

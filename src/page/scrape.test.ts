@@ -146,6 +146,7 @@ describe("scrapeClassInfo", () => {
   });
 });
 
+
 describe("task categories on real ManageBac labels", () => {
   it("keeps a category that has the same name as the type", () => {
     document.body.innerHTML = [

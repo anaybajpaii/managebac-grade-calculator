@@ -107,7 +107,6 @@ describe("buildView", () => {
     expect(view.detail).toBe("SL");
   });
 
-  
   it("uses the subject and level chosen in settings", () => {
     const view = buildView({
       ...base,
@@ -201,7 +200,7 @@ describe("buildView", () => {
     expect(view.weightsFromPage).toBe(false);
     expect(view.editor.pageWeights).toBeNull();
   });
-  
+
   it("counts extra categories on top of the page's weights", () => {
     const view = buildView({
       ...base,
@@ -241,5 +240,16 @@ describe("buildView", () => {
     expect(view.percent).toBeCloseTo(60);
     expect(view.unassigned).toEqual(["Formative"]);
   });
-  
+
+  it("provides a what-if model when a grade can be predicted", () => {
+    const view = buildView({ ...base, tasks: [task("Tests", 70, 100)] });
+    expect(view.whatIf?.categories[0]?.tasks).toEqual([{ score: 70, max: 100 }]);
+    expect(view.whatIf?.overall.bands).toHaveLength(7);
+    expect(view.whatIf?.method).toBe("average");
+  });
+
+  it("has no what-if model when nothing can be predicted", () => {
+    const view = buildView({ ...base, info: { title: "Theory of Knowledge", level: "HL" }, tasks: [task("Tests", 60, 100)] });
+    expect(view.whatIf).toBeNull();
+  });
 });

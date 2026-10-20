@@ -2,6 +2,7 @@ import { buildCategories, CATCH_ALL, uniqueCategories } from "../engine/categori
 import { boundsFromStarts, startsFromBands } from "../engine/custom-bounds";
 import { categoryPercent, pointsToNextGrade, predictGrade, weightedPercent } from "../engine/grade";
 import { resolveSubject } from "../engine/match";
+import type { WhatIfModel } from "../engine/whatif";
 import type { BoundariesFile, CategoryMethod } from "../engine/types";
 import type { ClassInfo, PageWeight, ScrapedTask } from "../page/types";
 import type { ClassSettings, Weighting } from "../storage/types";
@@ -45,6 +46,8 @@ export interface OverlayView {
   unassigned: string[];
   note: string | null;
   weightsFromPage: boolean;
+  /** Everything the what-if section needs; null when no grade can be predicted. */
+  whatIf: WhatIfModel | null;
   editor: EditorModel;
 }
 
@@ -130,6 +133,10 @@ export function buildView(input: ViewInput): OverlayView {
     unassigned,
     note,
     weightsFromPage: usePageWeights,
+    whatIf:
+      overall && categories.some((c) => c.weight > 0)
+        ? { categories: categories.map((c) => ({ ...c, tasks: c.tasks.map((t) => ({ ...t })) })), method: settings.method, overall }
+        : null,
     editor: {
       weightings: (usePageWeights ? (pageWeights ?? []) : settings.weightings).map((w) => ({ ...w })),
       pageWeights: pageWeights ? pageWeights.map((w) => ({ ...w })) : null,
