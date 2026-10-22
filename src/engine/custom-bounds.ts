@@ -23,7 +23,11 @@ export function boundsFromStarts(starts: number[]): BandSet {
   const froms = [0, ...starts];
   return {
     max: 100,
-    bands: froms.map((from, i) => [from, froms[i + 1] ?? 100]),
+    // The top of each band is just under the start of the next one.
+    bands: froms.map((from, i) => {
+      const next = froms[i + 1];
+      return [from, next === undefined ? 100 : Math.round((next - 0.1) * 10) / 10];
+    }),
   };
 }
 

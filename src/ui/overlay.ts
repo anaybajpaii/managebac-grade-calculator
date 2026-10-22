@@ -4,7 +4,8 @@ import { TIMEZONES } from "../storage/global";
 import type { KeyValueStore } from "../storage/store";
 import { parseForm, prettySubject, type EditorSave, type RawForm } from "./editor-form";
 import { STYLES } from "./styles";
-import { initialWhatIfState, renderWhatIf, type WhatIfState } from "./whatif-panel";
+import { renderBounds } from "./bounds-panel";
+import { initialWhatIfState, renderWhatIf, whatIfStateFits, type WhatIfState } from "./whatif-panel";
 import type { EditorModel, OverlayView } from "./view-model";
 
 const OPEN_KEY = "ui:open";
@@ -113,6 +114,8 @@ function renderPanel(
   onHide: () => void,
   onSettings: () => void,
   whatIfState: () => WhatIfState | null,
+  boundsOpen: boolean,
+  onBoundsToggle: (open: boolean) => void,
 ): HTMLElement {
   const hide = link(doc, "hide", "hide", onHide);
   const settings = link(doc, "settings", "gear", onSettings);
@@ -138,6 +141,9 @@ function renderPanel(
   if (scale) panel.append(scale);
   if (view.note) panel.append(el(doc, "div", "note", view.note));
   if (view.rows.length > 0) panel.append(renderCategories(doc, view));
+  if (view.bounds) {
+    panel.append(renderBounds(doc, view.bounds, view.boundsSource, view.grade, boundsOpen, onBoundsToggle));
+  }
   const state = view.whatIf ? whatIfState() : null;
   if (view.whatIf && state) {
     const section = renderWhatIf(doc, view.whatIf, view.percent, state);
@@ -584,12 +590,13 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
   // Kept between redraws so numbers typed into "What if" survive the page updating.
   function whatIfState(): WhatIfState | null {
     if (!current?.whatIf) return null;
-    const known = current.whatIf.categories.some(
-      (c) => c.weight > 0 && c.name.trim().toLowerCase() === whatIf?.category.trim().toLowerCase(),
-    );
-    if (!whatIf || !known) whatIf = initialWhatIfState(current.whatIf, current.next?.grade ?? null);
+    if (!whatIf || !whatIfStateFits(current.whatIf, whatIf)) {
+      whatIf = initialWhatIfState(current.whatIf, current.next?.grade ?? null);
+    }
     return whatIf;
   }
+
+  let boundsOpen = false;
 
   function draw(): void {
     shadow.replaceChildren();
@@ -611,7 +618,11 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
         }),
       );
     } else if (open) {
-      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), whatIfState));
+      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), whatIfState, boundsOpen, (next) => {
+          boundsOpen = next;
+          draw();
+        }),
+      );
     } else {
       root.append(renderTab(doc, current, () => setOpen(true)));
     }

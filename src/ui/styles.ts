@@ -110,10 +110,22 @@ input:disabled { color: var(--muted); border-color: var(--rule); background: tra
 .xbox .small { margin: 0 0 10px; }
 .xname { flex: 1; min-width: 0; }
 .xnum { width: 76px; flex: none; text-align: right; }
-.wi .wirow { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
-.wi .wirow span { min-width: 92px; color: var(--muted); font-size: 14px; }
+.wi .wirow { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; }
 .wi .wirow select { flex: 1; min-width: 0; }
-.wi .wnum { width: 90px; text-align: right; }
+.wi .wnum { width: 64px; flex: none; text-align: right; }
+.wi .pc { color: var(--muted); }
+.wi .wirow.target span { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.wi .wirow.target select { flex: none; width: 70px; }
+.wi .adds { margin: 0 0 10px; }
+.bhead { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0; font: 600 12px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.bhead:hover { color: var(--ink); }
+.blist { margin-top: 10px; }
+.brow { display: flex; align-items: baseline; gap: 10px; padding: 4px 8px; font-size: 14px; border-radius: 4px; }
+.brow b { width: 14px; }
+.brow .lead { flex: 1; border-bottom: 1px dotted var(--rule); }
+.brow.now { background: var(--ink); color: var(--bg); }
+.brow.now .lead { border-color: transparent; }
+.blist .small { margin-top: 8px; }
 .wires { min-height: 1.4em; margin: 0 0 14px; font: italic 15px var(--serif); color: var(--ink); }
 .foot { padding: 10px 20px 14px; font: italic 12.5px var(--serif); color: var(--muted); border-top: 1px solid var(--rule); }
 `;

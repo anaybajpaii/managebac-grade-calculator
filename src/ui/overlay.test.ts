@@ -25,6 +25,16 @@ const view: OverlayView = {
   note: null,
   weightsFromPage: false,
   appearance: { tone: "mono", mode: "light" },
+  bounds: [
+    { grade: 7, from: 85, to: 100 },
+    { grade: 6, from: 70, to: 84.9 },
+    { grade: 5, from: 55, to: 69.9 },
+    { grade: 4, from: 40, to: 54.9 },
+    { grade: 3, from: 25, to: 39.9 },
+    { grade: 2, from: 10, to: 24.9 },
+    { grade: 1, from: 0, to: 9.9 },
+  ],
+  boundsSource: "Physics HL, timezone 3. IB May 2026 boundaries.",
   whatIf: {
     method: "average",
     overall: { max: 100, bands: [[0, 9], [10, 24], [25, 39], [40, 54], [55, 69], [70, 84], [85, 100]] },
@@ -410,35 +420,59 @@ describe("overlay", () => {
       return shadowOf(host());
     }
 
+    const wnums = (root: ShadowRoot) => root.querySelectorAll<HTMLInputElement>(".wi .wirow .wnum");
+
     it("shows the section with sensible defaults", () => {
       const root = openPanel();
       expect(root.querySelector(".wi")).not.toBeNull();
       expect((root.querySelector(".wi select") as HTMLSelectElement).value).toBe("Tests");
-      expect((root.querySelector(".wi .wnum") as HTMLInputElement).value).toBe("100");
+      expect(wnums(root)[1]?.value).toBe("100");
       expect(root.querySelector(".wi")?.textContent).toContain("Enter a score");
     });
 
     it("predicts the grade for a typed score", () => {
       const root = openPanel();
-      const score = root.querySelectorAll<HTMLInputElement>(".wi .wnum")[1] as HTMLInputElement;
-      setValue(score, "100");
-      // Tests average (60 + 100) / 2 = 80, homework has no tasks, so overall is 80, grade 6.
+      setValue(wnums(root)[0] ?? null, "100");
       expect(root.querySelector(".wi")?.textContent).toContain("Overall 80.0% (+11.6), grade 6");
     });
 
     it("rejects a score higher than the task total", () => {
       const root = openPanel();
-      setValue(root.querySelectorAll(".wi .wnum")[1] ?? null, "150");
+      setValue(wnums(root)[0] ?? null, "150");
       expect(root.querySelector(".wi")?.textContent).toContain("cannot be higher");
+    });
+
+    it("adds and removes tasks and combines them", () => {
+      const root = openPanel();
+      setValue(wnums(root)[0] ?? null, "100");
+      (root.querySelector(".wi .adds .chip") as HTMLElement).click();
+      expect(root.querySelectorAll(".wi .wilist .wirow").length).toBe(2);
+      setValue(wnums(root)[2] ?? null, "50");
+      // Tests: (60 + 100 + 50) / 3 = 70, grade 6.
+      expect(root.querySelector(".wi")?.textContent).toContain("Overall 70.0%");
+      expect(root.querySelector(".wi")?.textContent).toContain("with 2 tasks");
+      (root.querySelectorAll(".wi .x")[1] as HTMLElement).click();
+      expect(root.querySelectorAll(".wi .wilist .wirow").length).toBe(1);
+    });
+
+    it("lets a task use a different category", () => {
+      const root = openPanel();
+      (root.querySelector(".wi .adds .chip") as HTMLElement).click();
+      const second = root.querySelectorAll<HTMLSelectElement>(".wi .wilist select")[1] as HTMLSelectElement;
+      second.value = "Homework";
+      second.dispatchEvent(new Event("change"));
+      setValue(wnums(root)[2] ?? null, "100");
+      // Tests stay 60, homework 100 -> 0.7 * 60 + 0.3 * 100 = 72.
+      expect(root.querySelector(".wi")?.textContent).toContain("Overall 72.0%");
     });
 
     it("says what is needed for a target grade", () => {
       const root = openPanel();
-      const target = root.querySelectorAll<HTMLSelectElement>(".wi select")[1] as HTMLSelectElement;
+      const selects = root.querySelectorAll<HTMLSelectElement>(".wi select");
+      const target = selects[selects.length - 1] as HTMLSelectElement;
       target.value = "6";
       target.dispatchEvent(new Event("change"));
-      // Tests are at 60. A new task needs 80 for the average to reach 70.
-      expect(root.querySelector(".wi")?.textContent).toContain("You need 80 / 100 (80%)");
+      expect(root.querySelector(".wi")?.textContent).toContain("You need 80%: 80 / 100");
       target.value = "7";
       target.dispatchEvent(new Event("change"));
       expect(root.querySelector(".wi")?.textContent).toContain("Full marks only reaches a 6");
@@ -448,15 +482,36 @@ describe("overlay", () => {
       const overlay = mountOverlay(document);
       overlay.update(view);
       (shadowOf(host()).querySelector(".tab") as HTMLElement).click();
-      const root = shadowOf(host());
-      setValue(root.querySelectorAll(".wi .wnum")[1] ?? null, "75");
+      setValue(wnums(shadowOf(host()))[0] ?? null, "75");
       overlay.update({ ...view, percent: 70 });
-      expect((shadowOf(host()).querySelectorAll(".wi .wnum")[1] as HTMLInputElement).value).toBe("75");
+      expect(wnums(shadowOf(host()))[0]?.value).toBe("75");
     });
 
     it("is hidden when no grade can be predicted", () => {
       const root = openPanel({ ...view, whatIf: null });
       expect(root.querySelector(".wi")).toBeNull();
+    });
+  });
+
+  describe("grade boundaries", () => {
+    function panel(): ShadowRoot {
+      const overlay = mountOverlay(document);
+      overlay.update(view);
+      (shadowOf(host()).querySelector(".tab") as HTMLElement).click();
+      return shadowOf(host());
+    }
+
+    it("starts closed and opens on click, showing the source", () => {
+      const root = panel();
+      expect(root.querySelector(".bounds .blist")).toBeNull();
+      (root.querySelector(".bhead") as HTMLElement).click();
+      const open = shadowOf(host());
+      expect(open.querySelectorAll(".blist .brow").length).toBe(7);
+      expect(open.querySelector(".brow.now")?.textContent).toContain("6");
+      expect(open.querySelector(".bounds")?.textContent).toContain("85% and above");
+      expect(open.querySelector(".bounds")?.textContent).toContain("timezone 3");
+      (open.querySelector(".bhead") as HTMLElement).click();
+      expect(shadowOf(host()).querySelector(".blist")).toBeNull();
     });
   });
 

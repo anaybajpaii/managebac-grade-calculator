@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { weightedPercent } from "./grade";
-import { predictWith, scoreNeeded, type WhatIfModel } from "./whatif";
+import { percentNeeded, predictWith, predictWithTasks, scoreNeeded, type WhatIfModel } from "./whatif";
 
 // Grade 2 from 10, then 25, 40, 55, 70, 85.
 const overall = {
@@ -95,5 +95,47 @@ describe("scoreNeeded", () => {
       c.name === "Tests" ? { ...c, tasks: [...c.tasks, { score: result.score, max: 50 }] } : c,
     );
     expect(weightedPercent(categories, "average")).toBeGreaterThanOrEqual(85);
+  });
+});
+
+describe("multiple planned tasks", () => {
+  const model: WhatIfModel = {
+    method: "average",
+    overall: { max: 100, bands: [[0, 9], [10, 24], [25, 39], [40, 54], [55, 69], [70, 84], [85, 100]] },
+    categories: [
+      { name: "Tests", weight: 70, tasks: [{ score: 60, max: 100 }] },
+      { name: "Homework", weight: 30, tasks: [] },
+    ],
+  };
+
+  it("combines tasks across categories", () => {
+    const r = predictWithTasks(model, [
+      { category: "Tests", score: 100, max: 100 },
+      { category: "Homework", score: 100, max: 100 },
+    ]);
+    expect(r?.percent).toBeCloseTo(0.7 * 80 + 0.3 * 100, 5);
+    expect(r?.grade).toBe(7);
+  });
+
+  it("rejects unknown categories", () => {
+    expect(predictWithTasks(model, [{ category: "Nope", score: 1, max: 2 }])).toBeNull();
+  });
+
+  it("works out the score several unknown tasks need", () => {
+    const need = percentNeeded(
+      model,
+      [
+        { category: "Tests", max: 100, score: null },
+        { category: "Tests", max: 100, score: null },
+      ],
+      6,
+    );
+    expect(need?.kind).toBe("needed");
+    if (need?.kind === "needed") expect(need.percent).toBeGreaterThan(70);
+  });
+
+  it("reports unreachable targets", () => {
+    const need = percentNeeded(model, [{ category: "Tests", max: 100, score: null }], 7);
+    expect(need).toEqual({ kind: "unreachable", bestGrade: 6 });
   });
 });

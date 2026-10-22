@@ -7,12 +7,20 @@ import type { WhatIfModel } from "../engine/whatif";
 import type { BoundariesFile, CategoryMethod } from "../engine/types";
 import type { ClassInfo, PageWeight, ScrapedTask } from "../page/types";
 import type { ClassSettings, Weighting } from "../storage/types";
+import { prettySubject } from "./editor-form";
 
 export interface CategoryRow {
   name: string;
   weight: number;
   percent: number | null;
   taskCount: number;
+}
+
+export interface BoundsRow {
+  grade: number;
+  /** Percentages of the overall mark. */
+  from: number;
+  to: number;
 }
 
 export interface EditorModel {
@@ -49,6 +57,9 @@ export interface OverlayView {
   weightsFromPage: boolean;
   /** Everything the what-if section needs; null when no grade can be predicted. */
   whatIf: WhatIfModel | null;
+  /** The overall grade boundaries in use, highest grade first. */
+  bounds: BoundsRow[] | null;
+  boundsSource: string;
   appearance: Appearance;
   editor: EditorModel;
 }
@@ -140,6 +151,20 @@ export function buildView(input: ViewInput): OverlayView {
       overall && categories.some((c) => c.weight > 0)
         ? { categories: categories.map((c) => ({ ...c, tasks: c.tasks.map((t) => ({ ...t })) })), method: settings.method, overall }
         : null,
+    bounds: overall
+      ? overall.bands
+          .map((band, i): BoundsRow => ({
+            grade: i + 1,
+            from: (band[0] / overall.max) * 100,
+            to: (band[1] / overall.max) * 100,
+          }))
+          .reverse()
+      : null,
+    boundsSource: custom
+      ? "Your own boundaries"
+      : subject
+        ? `${prettySubject(subject.name)} ${subject.level}${subject.timezone === 0 ? "" : `, timezone ${subject.timezone}`}. IB ${boundaries.label} boundaries.`
+        : "",
     appearance: input.appearance ?? DEFAULT_APPEARANCE,
     editor: {
       weightings: (usePageWeights ? (pageWeights ?? []) : settings.weightings).map((w) => ({ ...w })),
