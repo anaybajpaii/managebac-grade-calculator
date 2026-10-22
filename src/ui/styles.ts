@@ -127,5 +127,9 @@ input:disabled { color: var(--muted); border-color: var(--rule); background: tra
 .brow.now .lead { border-color: transparent; }
 .blist .small { margin-top: 8px; }
 .wires { min-height: 1.4em; margin: 0 0 14px; font: italic 15px var(--serif); color: var(--ink); }
+.fbtext { box-sizing: border-box; width: 100%; padding: 8px 10px; font: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--ink); border-radius: 4px; resize: vertical; }
+.fbgap { height: 8px; }
+.fbbox { margin: 10px 0 8px; }
+.fbdiag { margin: 0; padding: 8px 10px; font: 12px/1.5 ui-monospace, monospace; color: var(--muted); border: 1px solid var(--rule); border-radius: 4px; white-space: pre-wrap; }
 .foot { padding: 10px 20px 14px; font: italic 12.5px var(--serif); color: var(--muted); border-top: 1px solid var(--rule); }
 `;

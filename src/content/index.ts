@@ -1,3 +1,5 @@
+import { FEEDBACK_URL } from "../config";
+import { sendFeedback } from "../feedback";
 import boundariesRaw from "../../data/boundaries-m26.json";
 import type { BoundariesFile } from "../engine/types";
 import { scrapeClassInfo, scrapeTasks, scrapeWeights } from "../page/scrape";
@@ -6,6 +8,7 @@ import { loadGlobal, saveGlobal } from "../storage/global";
 import { loadSettings, resetSettings, saveSettings } from "../storage/settings";
 import { createChromeStore } from "../storage/store";
 import type { EditorSave } from "../ui/editor-form";
+import type { FeedbackPayload } from "../ui/feedback-panel";
 import { mountOverlay, type Overlay } from "../ui/overlay";
 import { buildView } from "../ui/view-model";
 
@@ -20,6 +23,16 @@ let timer: number | undefined;
 
 function currentClassId(): string | null {
   return classIdFromUrl(location.href);
+}
+
+function onFeedback(payload: FeedbackPayload): Promise<void> {
+  let version = "unknown";
+  try {
+    version = chrome.runtime.getManifest().version;
+  } catch {
+    // Keep "unknown".
+  }
+  return sendFeedback(FEEDBACK_URL, version, payload);
 }
 
 async function onSave(change: EditorSave): Promise<void> {
@@ -76,7 +89,7 @@ async function refresh(): Promise<void> {
   const { tasks, ungraded } = scrapeTasks(document);
   const pageWeights = scrapeWeights(document);
   const view = buildView({ tasks, ungraded, info, settings, boundaries, timezone, pageWeights, appearance: { tone, mode } });
-  overlay ??= mountOverlay(document, store, { onSave, onReset });
+  overlay ??= mountOverlay(document, store, FEEDBACK_URL === "" ? { onSave, onReset } : { onSave, onReset, onFeedback });
   overlay.update(view);
 }
 

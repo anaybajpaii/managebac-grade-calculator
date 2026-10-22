@@ -5,6 +5,7 @@ import type { KeyValueStore } from "../storage/store";
 import { parseForm, prettySubject, type EditorSave, type RawForm } from "./editor-form";
 import { STYLES } from "./styles";
 import { renderBounds } from "./bounds-panel";
+import { renderFeedback, type FeedbackPayload } from "./feedback-panel";
 import { initialWhatIfState, renderWhatIf, whatIfStateFits, type WhatIfState } from "./whatif-panel";
 import type { EditorModel, OverlayView } from "./view-model";
 
@@ -13,6 +14,8 @@ const OPEN_KEY = "ui:open";
 export interface OverlayHandlers {
   onSave?: (change: EditorSave) => Promise<void> | void;
   onReset?: () => Promise<void> | void;
+  /** When absent, the feedback link is hidden. Must reject if sending fails. */
+  onFeedback?: (payload: FeedbackPayload) => Promise<void>;
 }
 
 export interface Overlay {
@@ -113,12 +116,14 @@ function renderPanel(
   view: OverlayView,
   onHide: () => void,
   onSettings: () => void,
+  onFeedback: (() => void) | null,
   whatIfState: () => WhatIfState | null,
   boundsOpen: boolean,
   onBoundsToggle: (open: boolean) => void,
 ): HTMLElement {
   const hide = link(doc, "hide", "hide", onHide);
   const settings = link(doc, "settings", "gear", onSettings);
+  const feedback = onFeedback ? link(doc, "feedback", "fb", onFeedback) : null;
 
   const headline =
     view.percent === null ? "No graded tasks" : `${pct(view.percent)} weighted`;
@@ -131,7 +136,7 @@ function renderPanel(
     doc,
     "div",
     "panel",
-    el(doc, "div", "ph", el(doc, "b", undefined, "Grade Calculator"), el(doc, "span", "acts", settings, hide)),
+    el(doc, "div", "ph", el(doc, "b", undefined, "Grade Calculator"), el(doc, "span", "acts", ...(feedback ? [feedback] : []), settings, hide)),
     el(doc, "div", "hero", el(doc, "div", "big", view.grade === null ? "–" : String(view.grade)), meta),
   );
   panel.setAttribute("role", "region");
@@ -583,6 +588,7 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
 
   let open = false;
   let editing = false;
+  let giving = false;
   let current: OverlayView | null = null;
   let lastKey = "";
   let whatIf: WhatIfState | null = null;
@@ -610,7 +616,9 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
     const root = el(doc, "div", "root");
     root.dataset.tone = current.appearance.tone;
     root.dataset.mode = current.appearance.mode;
-    if (open && editing) {
+    if (open && giving && handlers.onFeedback) {
+      root.append(renderFeedback(doc, current, handlers.onFeedback, () => setGiving(false)));
+    } else if (open && editing) {
       root.append(
         renderSettings(doc, current, handlers, () => setEditing(false), (appearance) => {
           root.dataset.tone = appearance.tone;
@@ -618,7 +626,7 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
         }),
       );
     } else if (open) {
-      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), whatIfState, boundsOpen, (next) => {
+      root.append(renderPanel(doc, current, () => setOpen(false), () => setEditing(true), handlers.onFeedback ? () => setGiving(true) : null, whatIfState, boundsOpen, (next) => {
           boundsOpen = next;
           draw();
         }),
@@ -629,6 +637,11 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
     shadow.append(style, root);
   }
 
+  function setGiving(next: boolean): void {
+    giving = next;
+    draw();
+  }
+
   function setEditing(next: boolean): void {
     editing = next;
     draw();
@@ -636,7 +649,10 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
 
   function setOpen(next: boolean): void {
     open = next;
-    if (!next) editing = false;
+    if (!next) {
+      editing = false;
+      giving = false;
+    }
     store?.set(OPEN_KEY, next).catch(() => undefined);
     draw();
   }
@@ -659,7 +675,7 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
       lastKey = key;
       current = view;
       // Redrawing would wipe what the user is typing in settings.
-      if (editing && view) return;
+      if ((editing || giving) && view) return;
       draw();
     },
     destroy() {

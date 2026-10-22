@@ -493,6 +493,54 @@ describe("overlay", () => {
     });
   });
 
+  describe("feedback", () => {
+    function open(onFeedback?: (p: unknown) => Promise<void>): ShadowRoot {
+      const overlay = mountOverlay(document, undefined, onFeedback ? { onFeedback } : {});
+      overlay.update(view);
+      (shadowOf(host()).querySelector(".tab") as HTMLElement).click();
+      return shadowOf(host());
+    }
+
+    it("hides the link when feedback is not set up", () => {
+      expect(open().querySelector(".fb")).toBeNull();
+    });
+
+    it("sends the message with setup details and no class name", async () => {
+      const sent: unknown[] = [];
+      const root = open(async (p) => {
+        sent.push(p);
+      });
+      (root.querySelector(".fb") as HTMLElement).click();
+      const r = shadowOf(host());
+      const text = r.querySelector(".fbtext") as HTMLTextAreaElement;
+      text.value = "my grade looks wrong";
+      (r.querySelector(".btn.primary") as HTMLElement).click();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(sent.length).toBe(1);
+      const payload = sent[0] as { message: string; diagnostics: string };
+      expect(payload.message).toBe("my grade looks wrong");
+      expect(payload.diagnostics).toContain("graded tasks: 3");
+      expect(payload.diagnostics).not.toContain("Physics");
+      expect(shadowOf(host()).textContent).toContain("Sent");
+    });
+
+    it("asks for more text and shows failures", async () => {
+      const root = open(async () => {
+        throw new Error("no");
+      });
+      (root.querySelector(".fb") as HTMLElement).click();
+      const r = shadowOf(host());
+      (r.querySelector(".btn.primary") as HTMLElement).click();
+      expect(r.textContent).toContain("Write a little more");
+      (r.querySelector(".fbtext") as HTMLTextAreaElement).value = "something broke";
+      (r.querySelector(".btn.primary") as HTMLElement).click();
+      await new Promise((res) => setTimeout(res, 0));
+      expect(r.textContent).toContain("Could not send");
+      expect((r.querySelector(".btn.primary") as HTMLButtonElement).disabled).toBe(false);
+    });
+  });
+
   describe("grade boundaries", () => {
     function panel(): ShadowRoot {
       const overlay = mountOverlay(document);
