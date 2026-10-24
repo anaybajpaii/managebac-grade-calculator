@@ -157,7 +157,7 @@ function renderPanel(
     section.addEventListener("keypress", (event) => event.stopPropagation());
     panel.append(section);
   }
-  panel.append(el(doc, "div", "foot", "Everything stays in your browser."));
+  panel.append(el(doc, "div", "foot", "Estimate only, not an official grade. Settings stay in your browser."));
   return panel;
 }
 
