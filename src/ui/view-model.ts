@@ -60,6 +60,10 @@ export interface OverlayView {
   /** The overall grade boundaries in use, highest grade first. */
   bounds: BoundsRow[] | null;
   boundsSource: string;
+  /** The IB subject the boundaries came from, or null when none matched. */
+  matchedSubject: string | null;
+  /** The level actually used (from the page or chosen in settings). */
+  levelUsed: "SL" | "HL" | null;
   appearance: Appearance;
   editor: EditorModel;
 }
@@ -165,6 +169,8 @@ export function buildView(input: ViewInput): OverlayView {
       : subject
         ? `${prettySubject(subject.name)} ${subject.level}${subject.timezone === 0 ? "" : `, timezone ${subject.timezone}`}. IB ${boundaries.label} boundaries.`
         : "",
+    matchedSubject: subject ? prettySubject(subject.name) : null,
+    levelUsed: level ?? null,
     appearance: input.appearance ?? DEFAULT_APPEARANCE,
     editor: {
       weightings: (usePageWeights ? (pageWeights ?? []) : settings.weightings).map((w) => ({ ...w })),

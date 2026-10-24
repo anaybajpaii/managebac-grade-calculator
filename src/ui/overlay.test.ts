@@ -35,6 +35,8 @@ const view: OverlayView = {
     { grade: 1, from: 0, to: 9.9 },
   ],
   boundsSource: "Physics HL, timezone 3. IB May 2026 boundaries.",
+  matchedSubject: "Physics",
+  levelUsed: "HL",
   whatIf: {
     method: "average",
     overall: { max: 100, bands: [[0, 9], [10, 24], [25, 39], [40, 54], [55, 69], [70, 84], [85, 100]] },
@@ -505,7 +507,7 @@ describe("overlay", () => {
       expect(open().querySelector(".fb")).toBeNull();
     });
 
-    it("sends the message with setup details and no class name", async () => {
+    it("sends the message with setup details and no scores", async () => {
       const sent: unknown[] = [];
       const root = open(async (p) => {
         sent.push(p);
@@ -520,8 +522,10 @@ describe("overlay", () => {
       expect(sent.length).toBe(1);
       const payload = sent[0] as { message: string; diagnostics: string };
       expect(payload.message).toBe("my grade looks wrong");
-      expect(payload.diagnostics).toContain("graded tasks: 3");
-      expect(payload.diagnostics).not.toContain("Physics");
+      expect(payload.diagnostics).toContain("tasks with a score: 3");
+      expect(payload.diagnostics).toContain("matched subject: Physics");
+      expect(payload.diagnostics).toContain("level: HL");
+      expect(payload.diagnostics).not.toContain("60");
       expect(shadowOf(host()).textContent).toContain("Sent");
     });
 

@@ -5,4 +5,4 @@ export const DEFAULT_TIMEZONE = 2;
  * Where feedback is sent (a Formspree endpoint, e.g. https://formspree.io/f/xxxxxxxx).
  * Leave empty to hide the feedback link.
  */
-export const FEEDBACK_URL = "https://formspree.io/f/xbggrwoy";
+export const FEEDBACK_URL = "";

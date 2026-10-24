@@ -22,16 +22,18 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** Plain facts about the setup. No task names, scores, grades or class names. */
+/** Plain facts about the setup. No task names, scores or grades. */
 export function diagnosticsText(view: OverlayView): string {
   const e = view.editor;
   return [
-    `subject: ${e.subjectName ?? "not matched"}`,
-    `level: ${e.level ?? "unknown"}`,
+    `class: ${view.title ?? "unknown"}`,
+    `matched subject: ${view.matchedSubject ?? "none"}`,
+    `level: ${view.levelUsed ?? "unknown"}`,
     `timezone: ${e.timezone}`,
-    `graded tasks: ${view.gradedCount}`,
+    `tasks with a score: ${view.gradedCount}`,
     `tasks without a score: ${view.ungraded}`,
-    `categories: ${view.rows.length}`,
+    `categories: ${view.rows.map((r) => `${r.name} (${r.weight}%)`).join(", ") || "none"}`,
+    `not weighted: ${view.unassigned.join(", ") || "none"}`,
     `weights from page: ${view.weightsFromPage}`,
     `counting: ${e.method}`,
     `own boundaries: ${e.customStarts !== null}`,
