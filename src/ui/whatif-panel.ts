@@ -44,13 +44,11 @@ function newRow(model: WhatIfModel, previous?: WhatIfRow): WhatIfRow {
   };
 }
 
-/** Picks sensible starting values the first time the section is shown. */
 export function initialWhatIfState(model: WhatIfModel, nextGrade: number | null): WhatIfState {
   const maxGrade = model.overall.bands.length;
   return { rows: [newRow(model)], target: String(Math.min(maxGrade, nextGrade ?? maxGrade)) };
 }
 
-/** True when every row still points at a category that exists and counts. */
 export function whatIfStateFits(model: WhatIfModel, state: WhatIfState): boolean {
   return (
     state.rows.length > 0 &&

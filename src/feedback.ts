@@ -5,7 +5,6 @@ type Fetch = (url: string, init: RequestInit) => Promise<{ ok: boolean }>;
 const MIN_GAP_MS = 20_000;
 let lastSent = 0;
 
-/** Posts feedback as JSON. Rejects when the endpoint fails or sends come too fast. */
 export async function sendFeedback(
   url: string,
   version: string,
@@ -30,7 +29,6 @@ export async function sendFeedback(
   lastSent = now();
 }
 
-/** For tests. */
 export function resetFeedbackLimit(): void {
   lastSent = 0;
 }

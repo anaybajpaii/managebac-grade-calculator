@@ -15,7 +15,6 @@ function withTask(model: WhatIfModel, category: string, score: number, max: numb
   return model.categories.map((c, i) => (i === index ? { ...c, tasks: [...c.tasks, { score, max }] } : c));
 }
 
-/** The overall percentage and grade if one more task with this score is added to a category. */
 export function predictWith(
   model: WhatIfModel,
   category: string,
@@ -36,7 +35,6 @@ export type ScoreNeeded =
   | { kind: "unreachable"; bestGrade: number }
   | { kind: "noweight" };
 
-/** The lowest score on one more task in a category that reaches a target grade. */
 export function scoreNeeded(model: WhatIfModel, category: string, max: number, targetGrade: number): ScoreNeeded | null {
   const band = model.overall.bands[targetGrade - 1];
   if (!band || !Number.isFinite(max) || max <= 0) return null;
@@ -56,7 +54,6 @@ export function scoreNeeded(model: WhatIfModel, category: string, max: number, t
     if ((at(mid) ?? 0) >= target) high = mid;
     else low = mid;
   }
-  // Round up to one decimal so the shown score really reaches the target.
   let score = Math.min(max, Math.ceil(high * 10 - 1e-9) / 10);
   if ((at(score) ?? 0) < target) score = Math.min(max, score + 0.1);
   return { kind: "needed", score };
@@ -65,7 +62,6 @@ export function scoreNeeded(model: WhatIfModel, category: string, max: number, t
 export interface PlannedTask {
   category: string;
   max: number;
-  /** null: not known yet, so work out what it needs to be. */
   score: number | null;
 }
 
@@ -82,7 +78,6 @@ function validTask(model: WhatIfModel, t: { category: string; score: number; max
   );
 }
 
-/** The overall percentage and grade if several more tasks are added. */
 export function predictWithTasks(
   model: WhatIfModel,
   tasks: { category: string; score: number; max: number }[],
@@ -106,10 +101,6 @@ export type PercentNeeded =
   | { kind: "unreachable"; bestGrade: number }
   | { kind: "noweight" };
 
-/**
- * The same percentage on every task with no score yet that reaches a target grade, given the
- * tasks that already have a score. `scores` lines up with the tasks that had no score.
- */
 export function percentNeeded(model: WhatIfModel, planned: PlannedTask[], targetGrade: number): PercentNeeded | null {
   const band = model.overall.bands[targetGrade - 1];
   const unknown = planned.filter((t) => t.score === null);
@@ -137,7 +128,6 @@ export function percentNeeded(model: WhatIfModel, planned: PlannedTask[], target
     if ((at(mid) ?? 0) >= target) high = mid;
     else low = mid;
   }
-  // Round up to a tenth of a percent so the shown numbers really reach the target.
   let fraction = Math.min(1, Math.ceil(high * 1000 - 1e-9) / 1000);
   while (fraction < 1 && (at(fraction) ?? 0) < target) fraction = Math.min(1, fraction + 0.001);
   return {

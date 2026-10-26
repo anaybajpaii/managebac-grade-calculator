@@ -14,7 +14,6 @@ const OPEN_KEY = "ui:open";
 export interface OverlayHandlers {
   onSave?: (change: EditorSave) => Promise<void> | void;
   onReset?: () => Promise<void> | void;
-  /** When absent, the feedback link is hidden. Must reject if sending fails. */
   onFeedback?: (payload: FeedbackPayload) => Promise<void>;
 }
 
@@ -161,7 +160,6 @@ function renderPanel(
   return panel;
 }
 
-
 function labelled(doc: Document, text: string, control: HTMLElement, className = "field"): HTMLElement {
   return el(doc, "label", className, el(doc, "span", undefined, text), control);
 }
@@ -210,7 +208,6 @@ function renderSettings(
 ): HTMLElement {
   const model: EditorModel = view.editor;
 
-  // Category weights
   const rows = el(doc, "div", "wrows");
   const total = el(doc, "div", "small");
   const rowInputs: { name: HTMLInputElement; weight: HTMLInputElement }[] = [];
@@ -288,7 +285,6 @@ function renderSettings(
     syncWeights();
   });
 
-  // Extra categories: ones ManageBac does not weight (often Formative) but that should still count.
   const extraRows = el(doc, "div", "wrows");
   const extraInputs: { name: HTMLInputElement; weight: HTMLInputElement }[] = [];
   const extraChips = el(doc, "div", "chips");
@@ -382,7 +378,6 @@ function renderSettings(
     rowInputs[rowInputs.length - 1]?.name.focus();
   });
 
-  // Counting method
   const method = dropdown(
     doc,
     [
@@ -392,7 +387,6 @@ function renderSettings(
     model.method,
   );
 
-  // Subject, level, timezone
   const autoLabel = view.title ? `Detected: ${view.title}` : "Detected from the page";
   const subject = dropdown(
     doc,
@@ -414,7 +408,6 @@ function renderSettings(
     String(model.timezone),
   );
 
-  // Appearance (applies to every class, previewed live)
   const tone = dropdown(doc, TONES.map((t): [string, string] => [t.id, t.label]), view.appearance.tone);
   const mode = dropdown(doc, MODES.map((m): [string, string] => [m.id, m.label]), view.appearance.mode);
   function preview(): void {
@@ -425,7 +418,6 @@ function renderSettings(
   tone.addEventListener("change", preview);
   mode.addEventListener("change", preview);
 
-  // Own boundaries
   const useCustom = el(doc, "input");
   useCustom.type = "checkbox";
   useCustom.checked = model.customStarts !== null;
@@ -593,7 +585,6 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
   let lastKey = "";
   let whatIf: WhatIfState | null = null;
 
-  // Kept between redraws so numbers typed into "What if" survive the page updating.
   function whatIfState(): WhatIfState | null {
     if (!current?.whatIf) return null;
     if (!whatIf || !whatIfStateFits(current.whatIf, whatIf)) {
@@ -674,7 +665,6 @@ export function mountOverlay(doc: Document, store?: KeyValueStore, handlers: Ove
       if (key === lastKey) return;
       lastKey = key;
       current = view;
-      // Redrawing would wipe what the user is typing in settings.
       if ((editing || giving) && view) return;
       draw();
     },

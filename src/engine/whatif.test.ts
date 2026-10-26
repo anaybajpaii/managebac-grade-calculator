@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { weightedPercent } from "./grade";
 import { percentNeeded, predictWith, predictWithTasks, scoreNeeded, type WhatIfModel } from "./whatif";
 
-// Grade 2 from 10, then 25, 40, 55, 70, 85.
 const overall = {
   max: 100,
   bands: [[0, 9], [10, 24], [25, 39], [40, 54], [55, 69], [70, 84], [85, 100]] as [number, number][],
@@ -23,7 +22,6 @@ function model(overrides: Partial<WhatIfModel> = {}): WhatIfModel {
 
 describe("predictWith", () => {
   it("adds a hypothetical task to one category", () => {
-    // Tests: average of 60 and 100 = 80. Homework stays 100. Overall 0.6 * 80 + 0.4 * 100 = 88.
     const result = predictWith(model(), "Tests", 100, 100);
     expect(result?.percent).toBeCloseTo(88);
     expect(result?.grade).toBe(7);
@@ -60,14 +58,12 @@ describe("scoreNeeded", () => {
     const m = model();
     const result = scoreNeeded(m, "Tests", 100, 7);
     expect(result).toEqual({ kind: "needed", score: 90 });
-    // The shown score reaches 85, and a tenth lower does not.
     expect(predictWith(m, "Tests", 90, 100)?.percent).toBeGreaterThanOrEqual(85);
     expect(predictWith(m, "Tests", 89.9, 100)?.percent).toBeLessThan(85);
     expect(scoreNeeded(m, "Tests", 100, 6)).toEqual({ kind: "needed", score: 40 });
   });
 
   it("says any score works when the target is already safe", () => {
-    // Even a zero leaves the overall at 58, which is above the grade 5 boundary of 55.
     expect(scoreNeeded(model(), "Tests", 100, 5)).toEqual({ kind: "any" });
   });
 

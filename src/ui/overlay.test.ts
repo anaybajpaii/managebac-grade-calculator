@@ -450,7 +450,6 @@ describe("overlay", () => {
       (root.querySelector(".wi .adds .chip") as HTMLElement).click();
       expect(root.querySelectorAll(".wi .wilist .wirow").length).toBe(2);
       setValue(wnums(root)[2] ?? null, "50");
-      // Tests: (60 + 100 + 50) / 3 = 70, grade 6.
       expect(root.querySelector(".wi")?.textContent).toContain("Overall 70.0%");
       expect(root.querySelector(".wi")?.textContent).toContain("with 2 tasks");
       (root.querySelectorAll(".wi .x")[1] as HTMLElement).click();
@@ -464,7 +463,6 @@ describe("overlay", () => {
       second.value = "Homework";
       second.dispatchEvent(new Event("change"));
       setValue(wnums(root)[2] ?? null, "100");
-      // Tests stay 60, homework 100 -> 0.7 * 60 + 0.3 * 100 = 72.
       expect(root.querySelector(".wi")?.textContent).toContain("Overall 72.0%");
     });
 

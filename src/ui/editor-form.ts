@@ -43,7 +43,6 @@ export function parseForm(raw: RawForm): FormResult {
   const weightings: Weighting[] = [];
   const seen = new Set<string>();
   if (raw.usePage) {
-    // The page's weights are used live; keep the rows only as a fallback copy.
     for (const row of raw.weightings) {
       const name = row.name.trim();
       const weight = toNumber(row.weight);
@@ -134,7 +133,6 @@ function finish(
 
 const SMALL_WORDS = new Set(["and", "of", "in", "for", "the", "a"]);
 
-/** The boundaries PDF uses capitals; make the names readable in a dropdown. */
 export function prettySubject(name: string): string {
   return name
     .toLowerCase()

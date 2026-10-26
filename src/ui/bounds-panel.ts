@@ -18,7 +18,6 @@ function pct(value: number): string {
   return `${Math.round(value * 10) / 10}%`;
 }
 
-/** The grade boundaries in use, as a drop-down in the main card. */
 export function renderBounds(
   doc: Document,
   rows: BoundsRow[],

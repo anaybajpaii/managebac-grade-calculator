@@ -32,3 +32,7 @@ The in-panel feedback screen posts to the endpoint set in `FEEDBACK_URL` in `src
 ## Chrome Web Store
 
 Listing text and permission justifications are in `store/LISTING.md`, the privacy policy is in `store/PRIVACY.md` (fill in your name and email, then host it at a public URL), and screenshots are in `store/screenshots/`.
+
+## Font
+
+The interface uses Nunito, bundled in `fonts/` under the SIL Open Font License (`fonts/OFL.txt`). It is loaded from inside the extension, so no request is made to any font service.

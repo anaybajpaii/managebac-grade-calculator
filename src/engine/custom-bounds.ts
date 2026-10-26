@@ -1,6 +1,5 @@
 import type { BandSet } from "./types";
 
-/** Number of editable boundaries: the minimum % for grades 2 to 7. */
 export const START_COUNT = 6;
 
 export function validateStarts(starts: number[]): string | null {
@@ -18,12 +17,10 @@ export function validateStarts(starts: number[]): string | null {
   return null;
 }
 
-/** Turns "minimum % for grades 2..7" into the same shape as the official bands. */
 export function boundsFromStarts(starts: number[]): BandSet {
   const froms = [0, ...starts];
   return {
     max: 100,
-    // The top of each band is just under the start of the next one.
     bands: froms.map((from, i) => {
       const next = froms[i + 1];
       return [from, next === undefined ? 100 : Math.round((next - 0.1) * 10) / 10];

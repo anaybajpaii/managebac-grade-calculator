@@ -8,7 +8,6 @@ interface ToneColours {
   accent: string;
   tabInk: string;
   tabMuted: string;
-  /** Accent used on dark backgrounds. */
   accentDark: string;
 }
 
@@ -28,7 +27,6 @@ const TONE_RULES = (Object.keys(TONE_COLOURS) as ToneId[])
   .map((id) => `.root[data-tone="${id}"] { ${lightVars(TONE_COLOURS[id])} }`)
   .join("\n");
 
-// Neutral dark surfaces; the tone only supplies the accent colour.
 const DARK_VARS =
   "color-scheme: dark; --bg: #161616; --ink: #f1f1f1; --muted: #a3a3a3; --rule: #353535; --accent: var(--t-accent-dark); --tab-bg: var(--t-accent-dark); --tab-ink: #111111; --tab-muted: #3a3a3a;";
 
@@ -37,8 +35,8 @@ export const STYLES = `
 .root {
   ${lightVars(TONE_COLOURS.mono)}
   color-scheme: light;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   display: flex; flex-direction: column; align-items: flex-end;
   font: 15px/1.45 var(--sans); color: var(--ink);
 }

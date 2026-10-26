@@ -30,7 +30,7 @@ function onFeedback(payload: FeedbackPayload): Promise<void> {
   try {
     version = chrome.runtime.getManifest().version;
   } catch {
-    // Keep "unknown".
+    version = "unknown";
   }
   return sendFeedback(FEEDBACK_URL, version, payload);
 }
@@ -59,8 +59,6 @@ async function onReset(): Promise<void> {
   await refresh();
 }
 
-// After the extension is reloaded or updated, pages that were already open keep running the old
-// script, and every chrome.* call throws "Extension context invalidated". Stop quietly instead.
 function extensionIsGone(): boolean {
   return !chrome.runtime?.id;
 }
@@ -72,6 +70,27 @@ function shutDown(): void {
   for (const name of WINDOW_EVENTS) window.removeEventListener(name, schedule);
   overlay?.destroy();
   overlay = null;
+}
+
+let fontRequested = false;
+
+async function installFont(): Promise<void> {
+  if (extensionIsGone() || fontRequested) return;
+  fontRequested = true;
+  const files: [string, string][] = [
+    ["fonts/nunito.woff2", "normal"],
+    ["fonts/nunito-italic.woff2", "italic"],
+  ];
+  for (const [path, style] of files) {
+    try {
+      const data = await (await fetch(chrome.runtime.getURL(path))).arrayBuffer();
+      const face = new FontFace("Nunito", data, { style, weight: "200 1000" });
+      await face.load();
+      document.fonts.add(face);
+    } catch (error) {
+      console.error(TAG, error);
+    }
+  }
 }
 
 async function refresh(): Promise<void> {
@@ -103,6 +122,7 @@ function schedule(): void {
   }, 400);
 }
 
+installFont().catch(() => undefined);
 const observer = new MutationObserver(schedule);
 schedule();
 observer.observe(document.documentElement, { childList: true, subtree: true });

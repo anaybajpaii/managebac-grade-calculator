@@ -22,7 +22,6 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** Plain facts about the setup. No task names, scores or grades. */
 export function diagnosticsText(view: OverlayView): string {
   const e = view.editor;
   return [

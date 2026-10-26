@@ -21,5 +21,16 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "fonts/nunito.woff2",
+        "fonts/nunito-italic.woff2"
+      ],
+      "matches": [
+        "https://*.managebac.com/*"
+      ]
+    }
+  ]
 }

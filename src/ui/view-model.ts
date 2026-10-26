@@ -18,24 +18,20 @@ export interface CategoryRow {
 
 export interface BoundsRow {
   grade: number;
-  /** Percentages of the overall mark. */
   from: number;
   to: number;
 }
 
 export interface EditorModel {
   weightings: Weighting[];
-  /** Weights ManageBac shows for this class, if the page has them. */
   pageWeights: PageWeight[] | null;
   usePageWeights: boolean;
-  /** Extra categories counted on top of the page's weights. */
   extraWeightings: Weighting[];
   method: CategoryMethod;
   subjectName: string | null;
   level: "SL" | "HL" | null;
   timezone: number;
   customStarts: number[] | null;
-  /** Official grade 2 to 7 starts for the matched subject, used to prefill custom boundaries. */
   officialStarts: number[] | null;
   subjectNames: string[];
   pageCategories: string[];
@@ -55,14 +51,10 @@ export interface OverlayView {
   unassigned: string[];
   note: string | null;
   weightsFromPage: boolean;
-  /** Everything the what-if section needs; null when no grade can be predicted. */
   whatIf: WhatIfModel | null;
-  /** The overall grade boundaries in use, highest grade first. */
   bounds: BoundsRow[] | null;
   boundsSource: string;
-  /** The IB subject the boundaries came from, or null when none matched. */
   matchedSubject: string | null;
-  /** The level actually used (from the page or chosen in settings). */
   levelUsed: "SL" | "HL" | null;
   appearance: Appearance;
   editor: EditorModel;

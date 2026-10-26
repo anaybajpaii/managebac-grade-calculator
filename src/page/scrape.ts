@@ -33,8 +33,6 @@ export function scrapeTasks(root: ParentNode): ScrapedTasks {
     }
     const labels = [...card.querySelectorAll(".label-and-due .label")].map((el) => clean(el.textContent)).filter(Boolean);
     const type = labels.find((label) => TYPE_LABEL.test(label)) ?? null;
-    // ManageBac shows the type first and the task category second. The category can have the same
-    // name as the type (a "Formative" category on a Formative task), so do not filter it out.
     const category = labels[1] ?? labels[0] ?? UNCATEGORISED;
     tasks.push({ title, type, category, labels, score: points.score, max: points.max });
   }
@@ -66,7 +64,6 @@ function findHeading(root: ParentNode): Element | null {
   let found: Element | null = null;
   for (const node of root.querySelectorAll(HEADING_TAGS)) {
     if (!HEADING.test(clean(node.textContent))) continue;
-    // Keep the deepest match: the one with no child carrying the same text.
     found = node;
   }
   return found;
@@ -76,11 +73,6 @@ function percentLeaves(container: Element): Element[] {
   return [...container.querySelectorAll("*")].filter((node) => isLeaf(node) && PERCENT_ONLY.test(clean(node.textContent)));
 }
 
-/**
- * Reads the "Task Categories" box ManageBac shows next to the tasks (category name and its
- * weight). Works by looking for the heading text and then for "NN%" cells, so it does not
- * depend on ManageBac's class names.
- */
 export function scrapeWeights(root: ParentNode): PageWeight[] | null {
   const heading = findHeading(root);
   if (!heading) return null;
