@@ -27,11 +27,11 @@ TypeScript (bundled with esbuild), Manifest V3, Vitest for tests. A Python scrip
 
 ## Feedback form
 
-The in-panel feedback screen posts to the endpoint set in `FEEDBACK_URL` in `src/config.ts` (a Formspree form). Leave it empty to hide the feedback link.
+The in-panel feedback screen posts to the endpoint set in `FEEDBACK_URL` in `src/config.ts` (a Formspree form).
 
 ## Chrome Web Store
 
-Listing text and permission justifications are in `store/LISTING.md`, the privacy policy is in `store/PRIVACY.md` (fill in your name and email, then host it at a public URL), and screenshots are in `store/screenshots/`.
+Listing text and permission justifications are in `store/LISTING.md`, the privacy policy is in `store/PRIVACY.md`, and screenshots are in `store/screenshots/`.
 
 ## Font
 
