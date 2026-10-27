@@ -58,4 +58,5 @@ If this policy changes, the new version will be posted at the same address with 
 
 ## Contact
 
-[YOUR NAME], [YOUR CONTACT EMAIL]
+Anay Bajpai 
+anay.bajpai25@gmail.com
